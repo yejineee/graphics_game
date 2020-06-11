@@ -99,16 +99,18 @@ void draw_obj_model(int model_idx, int color_mode, int object_code) ;
 {
     GLfloat theta;
     GLfloat orbit_theta;
-    GLfloat orbit_radius;
+    GLfloat x_pos, y_pos, z_pos ;
     UserState():
         theta(0),
         orbit_theta(0),
-        orbit_radius(0){}
+        y_pos(0),
+        z_pos(0),
+        x_pos(0){}
     glm::mat4 get_transf()
     {
         mat4 M(1.0f);
 //        M = rotate(M, orbit_theta,vec3(0.f, 1.f, 0.f));
-        M = translate(M, vec3(orbit_radius, 0, 0));
+        M = translate(M, vec3(x_pos, y_pos, z_pos));
         M = rotate(M, theta, vec3(0.f, 1.f, 0.f));
         return M;
     }
@@ -205,8 +207,8 @@ int main(int argc, char** argv)
 
 void init(){
 
-    user_state[MODEL_USER1].orbit_radius = -0.5f ;
-    user_state[MODEL_USER2].orbit_radius = 0.5f ;
+    user_state[MODEL_USER1].x_pos = -0.5f ;
+    user_state[MODEL_USER2].x_pos = 0.5f ;
     for (unsigned int k = 0; k < NUM_OF_MODELS; ++k)
         {
             attrib_t attrib;
@@ -250,12 +252,8 @@ void display()
         }
     }
     else{
-        glClearColor(0.5f, 0.5f, 0.f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        render_userModel(shading_mode) ;
         glFlush() ;
-        glutSwapBuffers();
-        
     }
     
     
@@ -275,10 +273,26 @@ void render_userModel(int color_mode){
     double aspect = 1.0 * width / height ;
     
     if (is_obj_valid) {
-        for (int i = 0; i < NUM_OF_MODELS; ++i)
-        {
+        if(user == -1){
+            for (int i = 0; i < NUM_OF_MODELS; ++i)
+            {
+                //(set uniform variables of shaders for model i)
+                mat4 M = user_state[i].get_transf() ;
+                mat4 V = camera.get_viewing() ;
+                mat4 P = camera.get_projection(aspect)  ;
+                location = glGetUniformLocation(program, "M");
+                glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(M)) ;
+                location = glGetUniformLocation(program, "P");
+                glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(P)) ;
+                location = glGetUniformLocation(program, "V");
+                glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(V)) ;
+                draw_obj_model(i, color_mode, i+1);
+                
+            }
+        }
+        else{
             //(set uniform variables of shaders for model i)
-            mat4 M = user_state[i].get_transf() ;
+            mat4 M = user_state[user].get_transf() ;
             mat4 V = camera.get_viewing() ;
             mat4 P = camera.get_projection(aspect)  ;
             location = glGetUniformLocation(program, "M");
@@ -287,8 +301,7 @@ void render_userModel(int color_mode){
             glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(P)) ;
             location = glGetUniformLocation(program, "V");
             glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(V)) ;
-            draw_obj_model(i, color_mode, i+1);
-            
+            draw_obj_model(user, color_mode, user+1);
         }
     }
     if (color_mode != PICKING) {
@@ -314,6 +327,7 @@ void mouse(int button, int state, int x, int y)
 
         if(user < 0 && ( res[0] == 1 || res[0] == 2)){
             user = res[0]-1 ;
+            user_state[user].x_pos = 0 ;
             printf("selet user model %d\n", res[0]) ;
         }
         
