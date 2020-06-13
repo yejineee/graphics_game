@@ -9,6 +9,11 @@ out vec2 fTexcoord ;
 out vec4 fColorFront;
 out vec4 fColorBack;
 
+in vec4 vColor;
+in vec2 aTexCoord;
+out vec4 fColor;
+out vec2 TexCoord;
+
 uniform mat4 M;
 uniform mat4 P;
 uniform mat4 V;
@@ -71,7 +76,12 @@ void gouraud_shading()
 
 void main()
 {
-    if(ColorMode == 2){
+    if(ColorMode == 0){
+        gl_Position = M * vPosition;
+//        fColor = vColor;
+        TexCoord = aTexCoord;
+    }
+    else if(ColorMode == 2){
         phong_shading() ;
     }
     else{

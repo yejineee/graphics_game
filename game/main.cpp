@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glew.h>
-#include "/Users/yang-yejin/Library/Mobile Documents/com~apple~CloudDocs/Downloads/GLUT.framework/Headers/glut.h"
+#include "/Users/im-aron/Downloads/GLUT.framework/Headers/glut.h"
 #include "LoadShaders.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -94,6 +94,7 @@ GLint min_filter, GLint mag_filter) ;
 void render_userModel(int color_mode) ;
 GLuint generate_tex(const char* tex_file_path, GLint min_filter,GLint mag_filter) ;
 void draw_obj_model(int model_idx, int color_mode, int object_code) ;
+GLuint generate_background();
 
  struct UserState
 {
@@ -159,14 +160,65 @@ Camera camera ;
 int user = -1 ;
 enum {MODEL_USER1, MODEL_USER2, NUM_OF_MODELS};
 enum {PICKING=1, PHONG, GOURAUD} ;
-const char* vert_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/viewing.vert" ;
-const char* frag_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/viewing.frag" ;
-const char* base_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/" ;
+const char* vert_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/viewing.vert" ;
+const char* frag_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/viewing.frag" ;
+const char* base_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/" ;
 const char* model_files[NUM_OF_MODELS] = {
-   "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/ARC170.obj",
-"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/bixler.obj"
+   "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/ARC170.obj",
+"/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/bixler.obj"
    };
 GLuint vao[NUM_OF_MODELS], vbo[NUM_OF_MODELS][3];
+GLuint texture1;
+GLuint rec_vao, rec_vbo[3];
+//float rec_vertices[] = {
+//     // 위치              // 컬러             // 텍스처 좌표
+//     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // 우측 상단
+//     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // 우측 하단
+//    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // 좌측 하단
+//    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // 좌측 상단
+//};
+
+//float rec_vertices[] = {
+//     0.5f,  0.5f, 0.0f,
+//     0.5f, -0.5f, 0.0f,
+//    -0.5f,  0.5f, 0.0f,
+//
+//     0.5f, -0.5f, 0.0f,
+//    -0.5f, -0.5f, 0.0f,
+//    -0.5f,  0.5f, 0.0f
+//};
+//
+//float rec_color[] = {
+//    1.0f, 0.0f, 0.0f,
+//    0.0f, 1.0f, 0.0f,
+//    1.0f, 1.0f, 0.0f,
+//
+//    0.0f, 1.0f, 0.0f,
+//    0.0f, 0.0f, 1.0f,
+//    1.0f, 1.0f, 0.0f
+//};
+//
+//float rec_texcoord[] = {
+//    1.0f, 1.0f,
+//    1.0f, 0.0f,
+//    0.0f, 1.0f,
+//
+//    1.0f, 0.0f,
+//    0.0f, 0.0f,
+//    0.0f, 1.0f
+//};
+
+//unsigned int indices[] = {
+//    0, 1, 3, // first triangle
+//    1, 2, 3  // second triangle
+//};
+GLvec rec_vertices;
+GLvec rec_colors;
+GLvec rec_texcoord;
+void get_rect_3d(GLvec &p, GLfloat width, GLfloat height, GLfloat z);
+void get_vertex_color(GLvec &color, GLuint n, GLfloat r, GLfloat g, GLfloat b);
+void get_rect_texcoord(GLvec &q);
+
 float model_scales[NUM_OF_MODELS] = {1.0f, 1.0f};
 UserState user_state[NUM_OF_MODELS];
 vector<real_t> vertices[NUM_OF_MODELS];
@@ -180,13 +232,14 @@ vector<real_t> texcoords[NUM_OF_MODELS];
 map<string, unsigned int> texmap[NUM_OF_MODELS];
 bool is_obj_valid = false;
 bool is_tex_valid = false;
-
+int w_width;
+int w_height;
 
 int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA|GLUT_DOUBLE|GLUT_DEPTH|GLUT_3_2_CORE_PROFILE);
-    glutInitWindowSize(1024, 1024);
+    glutInitWindowSize(2048, 2048);
     glutCreateWindow("texture");
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
@@ -203,9 +256,20 @@ int main(int argc, char** argv)
     glutMouseFunc(mouse) ;
     glutMainLoop();
 }
-
+//void bind_buffer(GLint buffer, float p[], int program, const GLchar *attri_name, GLint attri_size)
+//{
+//    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+//    glBufferData(GL_ARRAY_BUFFER, sizeof(p), p, GL_STATIC_DRAW);
+//    GLuint location = glGetAttribLocation(program, attri_name);
+//    glVertexAttribPointer(location, attri_size, GL_FLOAT, GL_FALSE, 0, 0);
+//    glEnableVertexAttribArray(location);
+//}
 
 void init(){
+    w_width = glutGet(GLUT_WINDOW_WIDTH) ;
+    w_height = glutGet(GLUT_WINDOW_HEIGHT) ;
+    
+    build_program();
 
     user_state[MODEL_USER1].x_pos = -0.5f ;
     user_state[MODEL_USER2].x_pos = 0.5f ;
@@ -220,18 +284,47 @@ void init(){
             printf("%d ](%s), obj valid : %d, tex valid : %d\n", k, model_files[k], is_obj_valid, is_tex_valid) ;
     
     }
-    build_program();
     glGenVertexArrays(2, vao) ;
     
     for(int i = 0 ; i < NUM_OF_MODELS ; i++){
-         glBindVertexArray(vao[i]) ;
+        glBindVertexArray(vao[i]) ;
         glGenBuffers(3, vbo[i]) ;
-         bind_buffer(vbo[i][0], vertices[i], program, "vPosition", 3);
-         bind_buffer(vbo[i][1], normals[i], program, "vNormal", 3);
+        bind_buffer(vbo[i][0], vertices[i], program, "vPosition", 3);
+        bind_buffer(vbo[i][1], normals[i], program, "vNormal", 3);
         bind_buffer(vbo[i][2], texcoords[i], program, "vTexcoord", 2);
     }
 
 
+    get_rect_3d(rec_vertices, w_width/1000, w_height/1000, 0.5f);
+    get_vertex_color(rec_colors, rec_vertices.size() / 2, 0.8f, 0.2f, 0.5f);
+    get_rect_texcoord(rec_texcoord);
+    generate_background();
+
+    glGenVertexArrays(1, &rec_vao);
+    glBindVertexArray(rec_vao);
+    glGenBuffers(3, rec_vbo);
+    bind_buffer(rec_vbo[0], rec_vertices, program, "vPosition", 3);
+    bind_buffer(rec_vbo[1], rec_colors, program, "vColor", 3);
+    bind_buffer(rec_vbo[2], rec_texcoord, program, "aTexCoord", 2);
+
+//    glBindBuffer(GL_ARRAY_BUFFER, rec_vbo[0]);
+//    glBufferData(GL_ARRAY_BUFFER, sizeof(rec_vertices), rec_vertices, GL_STATIC_DRAW);
+//
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rec_vbo[1]);
+//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+//
+//    GLuint location = glGetAttribLocation(program, "vPosition");
+//    glVertexAttribPointer(location, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(0));
+//    glEnableVertexAttribArray(location);
+//
+//    location = glGetAttribLocation(program, "vColor");
+//    glVertexAttribPointer(location, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+//    glEnableVertexAttribArray(location);
+//
+//    location = glGetAttribLocation(program, "aTexCoord");
+//    glVertexAttribPointer(location, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+//    glEnableVertexAttribArray(location);
+    
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
@@ -268,10 +361,30 @@ void render_userModel(int color_mode){
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     
     GLint location ;
-    int width = glutGet(GLUT_WINDOW_WIDTH) ;
-    int height = glutGet(GLUT_WINDOW_HEIGHT) ;
-    double aspect = 1.0 * width / height ;
+    double aspect = 1.0 * w_width / w_height ;
     
+
+    camera.projection_mode = 0;
+    mat4 rec_M(1.0f);
+    mat4 rec_V = camera.get_viewing() ;
+    mat4 rec_P = camera.get_projection(aspect)  ;
+    location = glGetUniformLocation(program, "M");
+    glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(rec_M)) ;
+    location = glGetUniformLocation(program, "P");
+    glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(rec_P)) ;
+    location = glGetUniformLocation(program, "V");
+    glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(rec_V)) ;
+//    glUniform1i(UVARS("ObjectCode"), 3);
+    
+    glUniform1i(UVARS("ColorMode"), 0);
+    glBindVertexArray(rec_vao);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+
+    glUniform1i(UVARS("ourTexture"), 0);
+//    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
     if (is_obj_valid) {
         if(user == -1){
             for (int i = 0; i < NUM_OF_MODELS; ++i)
@@ -452,7 +565,34 @@ bool load_tex(const char* basedir, vector<real_t>& texcoords_out, map<string, un
     return true ;
 }
 
+GLuint generate_background(){
+    GLuint texture;
+    
+    glActiveTexture(GL_TEXTURE0);
+    glGenTextures(1, &texture1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/o4.jpg", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        std::cout<< "Suceed to load texture" << std::endl;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+//    glBindTexture(GL_TEXTURE_2D, 0);
+    return texture;
+}
 
 GLuint generate_tex(const char* tex_file_path, GLint min_filter,GLint mag_filter){
     int width, height, num_of_components;
@@ -648,4 +788,49 @@ void cb_main_menu(int value) {
     if(value == 0 || value == 1) camera.projection_mode = value ;
     else if(value == 2 || value == 3) shading_mode = value ;
     glutPostRedisplay() ;
+}
+#define VSET2(v, a, b, c) do {(v)[0] = (a); (v)[1] = (b); (v)[2] = (c);} while(0)
+#define VSET2PP(v, a, b, c) do {VSET2(v, a, b, c); v += 3;} while(0)
+
+#define VSET2_2D(v, a, b) do {(v)[0] = (a); (v)[1] = (b);} while(0)
+#define VSET2PP_2D(v, a, b) do {VSET2_2D(v, a, b); v += 2;} while(0)
+
+void get_rect_3d(GLvec &p, GLfloat width, GLfloat height, GLfloat z)
+{
+    GLfloat w2 = width / 2;
+    GLfloat h2 = height / 2;
+
+    p.resize(18);
+    GLfloat *data = p.data();
+
+    VSET2PP(data, -w2, -h2, z);
+    VSET2PP(data, +w2, -h2, z);
+    VSET2PP(data, -w2, +h2, z);
+
+    VSET2PP(data, +w2, -h2, z);
+    VSET2PP(data, +w2, +h2, z);
+    VSET2PP(data, -w2, +h2, z);
+}
+
+void get_vertex_color(GLvec &color, GLuint n, GLfloat r, GLfloat g, GLfloat b)
+{
+    color.resize(n * 3);
+    for(GLuint i = 0; i < n; ++i){
+        color[i * 3 + 0] = r;
+        color[i * 3 + 1] = g;
+        color[i * 3 + 2] = b;
+    }
+}
+
+void get_rect_texcoord(GLvec &q){
+    q.resize(12);
+    GLfloat *data = q.data();
+    
+    VSET2PP_2D(data, 1.0f, 1.0f);
+    VSET2PP_2D(data, 1.0f, 0.0f);
+    VSET2PP_2D(data, 0.0f, 1.0f);
+
+    VSET2PP_2D(data, 1.0f, 0.0f);
+    VSET2PP_2D(data, 0.0f, 0.0f);
+    VSET2PP_2D(data, 0.0f, 1.0f);
 }

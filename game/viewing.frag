@@ -6,6 +6,10 @@ in vec4 fNormal;
 in vec2 fTexcoord ;
 in vec4 fColorFront;
 in vec4 fColorBack;
+in vec4 fColor;
+in vec2 TexCoord;
+
+uniform sampler2D ourTexture;
 
 uniform int ColorMode;
 uniform int ObjectCode ;
@@ -65,7 +69,11 @@ void gouraud_shading()
 
 void main()
 {
-    if(ColorMode == 1){
+    if(ColorMode == 0){
+//        FragColor = fColor;
+        FragColor = texture(ourTexture, TexCoord);
+    }
+    else if(ColorMode == 1){
         float nc = ObjectCode / 255.0 ;
         FragColor = vec4(nc, nc, nc, 1) ;
     }
