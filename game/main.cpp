@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glew.h>
-#include "/Users/im-aron/Downloads/GLUT.framework/Headers/glut.h"
+#include "/Users/yang-yejin/Library/Mobile Documents/com~apple~CloudDocs/Downloads/GLUT.framework/Headers/glut.h"
 #include "LoadShaders.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -160,61 +160,38 @@ Camera camera ;
 int user = -1 ;
 enum {MODEL_USER1, MODEL_USER2, NUM_OF_MODELS};
 enum {PICKING=1, PHONG, GOURAUD} ;
-const char* vert_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/viewing.vert" ;
-const char* frag_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/viewing.frag" ;
-const char* base_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/" ;
+
+//path 지우지 말고 주석처리해놓기!
+const char* back2d_path = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/o4.jpg" ;
+const char* vert_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/viewing.vert" ;
+const char* frag_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/viewing.frag" ;
+const char* base_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/" ;
 const char* model_files[NUM_OF_MODELS] = {
-   "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/ARC170.obj",
-"/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/bixler.obj"
+   "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/space/Space Station Scene.obj",
+"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/bixler.obj"
    };
+//const char* model_files[NUM_OF_MODELS] = {
+//   "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/ARC170.obj",
+//"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/bixler.obj"
+//   };
+//const char* vert_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/viewing.vert" ;
+//const char* frag_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/viewing.frag" ;
+//const char* base_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/" ;
+//const char* model_files[NUM_OF_MODELS] = {
+//   "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/ARC170.obj",
+//"/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/bixler.obj"
+//   };
 GLuint vao[NUM_OF_MODELS], vbo[NUM_OF_MODELS][3];
+GLuint back_vao, back_vbo[3] ;
+
+
 GLuint texture1;
 GLuint rec_vao, rec_vbo[3];
-//float rec_vertices[] = {
-//     // 위치              // 컬러             // 텍스처 좌표
-//     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // 우측 상단
-//     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // 우측 하단
-//    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // 좌측 하단
-//    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // 좌측 상단
-//};
 
-//float rec_vertices[] = {
-//     0.5f,  0.5f, 0.0f,
-//     0.5f, -0.5f, 0.0f,
-//    -0.5f,  0.5f, 0.0f,
-//
-//     0.5f, -0.5f, 0.0f,
-//    -0.5f, -0.5f, 0.0f,
-//    -0.5f,  0.5f, 0.0f
-//};
-//
-//float rec_color[] = {
-//    1.0f, 0.0f, 0.0f,
-//    0.0f, 1.0f, 0.0f,
-//    1.0f, 1.0f, 0.0f,
-//
-//    0.0f, 1.0f, 0.0f,
-//    0.0f, 0.0f, 1.0f,
-//    1.0f, 1.0f, 0.0f
-//};
-//
-//float rec_texcoord[] = {
-//    1.0f, 1.0f,
-//    1.0f, 0.0f,
-//    0.0f, 1.0f,
-//
-//    1.0f, 0.0f,
-//    0.0f, 0.0f,
-//    0.0f, 1.0f
-//};
-
-//unsigned int indices[] = {
-//    0, 1, 3, // first triangle
-//    1, 2, 3  // second triangle
-//};
 GLvec rec_vertices;
 GLvec rec_colors;
 GLvec rec_texcoord;
+
 void get_rect_3d(GLvec &p, GLfloat width, GLfloat height, GLfloat z);
 void get_vertex_color(GLvec &color, GLuint n, GLfloat r, GLfloat g, GLfloat b);
 void get_rect_texcoord(GLvec &q);
@@ -256,14 +233,6 @@ int main(int argc, char** argv)
     glutMouseFunc(mouse) ;
     glutMainLoop();
 }
-//void bind_buffer(GLint buffer, float p[], int program, const GLchar *attri_name, GLint attri_size)
-//{
-//    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-//    glBufferData(GL_ARRAY_BUFFER, sizeof(p), p, GL_STATIC_DRAW);
-//    GLuint location = glGetAttribLocation(program, attri_name);
-//    glVertexAttribPointer(location, attri_size, GL_FLOAT, GL_FALSE, 0, 0);
-//    glEnableVertexAttribArray(location);
-//}
 
 void init(){
     w_width = glutGet(GLUT_WINDOW_WIDTH) ;
@@ -307,23 +276,7 @@ void init(){
     bind_buffer(rec_vbo[1], rec_colors, program, "vColor", 3);
     bind_buffer(rec_vbo[2], rec_texcoord, program, "aTexCoord", 2);
 
-//    glBindBuffer(GL_ARRAY_BUFFER, rec_vbo[0]);
-//    glBufferData(GL_ARRAY_BUFFER, sizeof(rec_vertices), rec_vertices, GL_STATIC_DRAW);
-//
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rec_vbo[1]);
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-//
-//    GLuint location = glGetAttribLocation(program, "vPosition");
-//    glVertexAttribPointer(location, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(0));
-//    glEnableVertexAttribArray(location);
-//
-//    location = glGetAttribLocation(program, "vColor");
-//    glVertexAttribPointer(location, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-//    glEnableVertexAttribArray(location);
-//
-//    location = glGetAttribLocation(program, "aTexCoord");
-//    glVertexAttribPointer(location, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-//    glEnableVertexAttribArray(location);
+
     
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -387,7 +340,7 @@ void render_userModel(int color_mode){
 
     if (is_obj_valid) {
         if(user == -1){
-            for (int i = 0; i < NUM_OF_MODELS; ++i)
+            for (int i = 0; i < 2; ++i)
             {
                 //(set uniform variables of shaders for model i)
                 mat4 M = user_state[i].get_transf() ;
@@ -576,9 +529,9 @@ GLuint generate_background(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
+    
     int width, height, nrChannels;
-    unsigned char *data = stbi_load("/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/o4.jpg", &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(back2d_path, &width, &height, &nrChannels, 0);
     if (data)
     {
         std::cout<< "Suceed to load texture" << std::endl;
