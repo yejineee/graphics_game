@@ -46,9 +46,7 @@ p[i3+2] = (float)(vz) ; \
 }while(0)
 
 
-
-#define UVAR(name, i) glGetUniformLocation(program, name)
-#define UVARS(name) UVAR(name, shading_mode)
+#define UVARS(name) glGetUniformLocation(program, name)
 
 #define MAP_FIND(map_obj, item)\
 ((map_obj).find(item) != (map_obj).end())
@@ -91,28 +89,29 @@ const vector<real_t>& texcoords,
 const vector<shape_t>& shapes,
 const vector<material_t>& materials,
 GLint min_filter, GLint mag_filter) ;
-void render_userModel(int color_mode) ;
+void render(int color_mode) ;
+void render_back(int color_mode) ;
 GLuint generate_tex(const char* tex_file_path, GLint min_filter,GLint mag_filter) ;
 void draw_obj_model(int model_idx, int color_mode, int object_code) ;
 GLuint generate_background();
 
- struct UserState
+ struct State
 {
     GLfloat theta;
     GLfloat orbit_theta;
     GLfloat x_pos, y_pos, z_pos ;
-    UserState():
+    
+    State():
         theta(0),
         orbit_theta(0),
         y_pos(0),
         z_pos(0),
         x_pos(0){}
+    
     glm::mat4 get_transf()
     {
         mat4 M(1.0f);
-//        M = rotate(M, orbit_theta,vec3(0.f, 1.f, 0.f));
         M = translate(M, vec3(x_pos, y_pos, z_pos));
-        M = rotate(M, theta, vec3(0.f, 1.f, 0.f));
         return M;
     }
     
@@ -130,7 +129,7 @@ struct Camera{
     float x_right;
     
     Camera() :
-    eye(0,4,5),
+    eye(0,4,3),
     center(0, 0, 0),
     up(0, 1, 0),
     zoom_factor(1.0f),
@@ -158,7 +157,7 @@ struct Camera{
 };
 Camera camera ;
 int user = -1 ;
-enum {MODEL_USER1, MODEL_USER2, NUM_OF_MODELS};
+enum {MODEL_USER1, MODEL_USER2, BACK, NUM_OF_MODELS};
 enum {PICKING=1, PHONG, GOURAUD} ;
 
 //path 지우지 말고 주석처리해놓기!
@@ -167,8 +166,9 @@ const char* vert_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/vi
 const char* frag_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/viewing.frag" ;
 const char* base_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/" ;
 const char* model_files[NUM_OF_MODELS] = {
-   "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/space/Space Station Scene.obj",
-"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/bixler.obj"
+"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/ARC170.obj",
+"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/bixler.obj",
+"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/tri-colonial sector.obj"
    };
 //const char* model_files[NUM_OF_MODELS] = {
 //   "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/ARC170.obj",
@@ -196,8 +196,8 @@ void get_rect_3d(GLvec &p, GLfloat width, GLfloat height, GLfloat z);
 void get_vertex_color(GLvec &color, GLuint n, GLfloat r, GLfloat g, GLfloat b);
 void get_rect_texcoord(GLvec &q);
 
-float model_scales[NUM_OF_MODELS] = {1.0f, 1.0f};
-UserState user_state[NUM_OF_MODELS];
+float model_scales[NUM_OF_MODELS] = {1.0f, 1.0f, 5.0f};
+State state[NUM_OF_MODELS];
 vector<real_t> vertices[NUM_OF_MODELS];
 vector<real_t> normals[NUM_OF_MODELS];
 vector<real_t> colors[NUM_OF_MODELS];
@@ -231,6 +231,7 @@ int main(int argc, char** argv)
     glutKeyboardFunc(keyboard) ;
     glutMotionFunc(motion) ;
     glutMouseFunc(mouse) ;
+    glutSpecialFunc(cb_special) ;
     glutMainLoop();
 }
 
@@ -240,8 +241,8 @@ void init(){
     
     build_program();
 
-    user_state[MODEL_USER1].x_pos = -0.5f ;
-    user_state[MODEL_USER2].x_pos = 0.5f ;
+    state[MODEL_USER1].x_pos = -0.5f ;
+    state[MODEL_USER2].x_pos = 0.5f ;
     for (unsigned int k = 0; k < NUM_OF_MODELS; ++k)
         {
             attrib_t attrib;
@@ -253,7 +254,7 @@ void init(){
             printf("%d ](%s), obj valid : %d, tex valid : %d\n", k, model_files[k], is_obj_valid, is_tex_valid) ;
     
     }
-    glGenVertexArrays(2, vao) ;
+    glGenVertexArrays(NUM_OF_MODELS, vao) ;
     
     for(int i = 0 ; i < NUM_OF_MODELS ; i++){
         glBindVertexArray(vao[i]) ;
@@ -291,14 +292,14 @@ void init(){
 void display()
 {
     if(user < 0){
-        render_userModel(shading_mode) ;
+        render(shading_mode) ;
         glFlush();
-        for (int i = 0; i < NUM_OF_MODELS; ++i) {
-            user_state[i].theta = clock() * 0.000005f;
+        for (int i = 0; i < 2; ++i) {
+            state[i].theta = clock() * 0.000005f;
         }
     }
     else{
-        render_userModel(shading_mode) ;
+        render(shading_mode) ;
         glFlush() ;
     }
     
@@ -307,7 +308,8 @@ void display()
      
 }
 
-void render_userModel(int color_mode){
+
+void render(int color_mode){
     
     glClearColor(1.f, 1.f, 1.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -317,33 +319,31 @@ void render_userModel(int color_mode){
     double aspect = 1.0 * w_width / w_height ;
     
 
-    camera.projection_mode = 0;
-    mat4 rec_M(1.0f);
-    mat4 rec_V = camera.get_viewing() ;
-    mat4 rec_P = camera.get_projection(aspect)  ;
-    location = glGetUniformLocation(program, "M");
-    glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(rec_M)) ;
-    location = glGetUniformLocation(program, "P");
-    glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(rec_P)) ;
-    location = glGetUniformLocation(program, "V");
-    glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(rec_V)) ;
-//    glUniform1i(UVARS("ObjectCode"), 3);
-    
-    glUniform1i(UVARS("ColorMode"), 0);
-    glBindVertexArray(rec_vao);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-
-    glUniform1i(UVARS("ourTexture"), 0);
-//    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
     if (is_obj_valid) {
         if(user == -1){
             for (int i = 0; i < 2; ++i)
             {
+                camera.projection_mode = 0;
+                mat4 rec_M(1.0f);
+                mat4 rec_V = camera.get_viewing() ;
+                mat4 rec_P = camera.get_projection(aspect)  ;
+                location = glGetUniformLocation(program, "M");
+                glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(rec_M)) ;
+                location = glGetUniformLocation(program, "P");
+                glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(rec_P)) ;
+                location = glGetUniformLocation(program, "V");
+                glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(rec_V)) ;
+                
+                glUniform1i(UVARS("ColorMode"), 0);
+                glBindVertexArray(rec_vao);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, texture1);
+
+                glUniform1i(UVARS("ourTexture"), 0);
+                glDrawArrays(GL_TRIANGLES, 0, 6);
+                
                 //(set uniform variables of shaders for model i)
-                mat4 M = user_state[i].get_transf() ;
+                mat4 M = state[i].get_transf() ;
                 mat4 V = camera.get_viewing() ;
                 mat4 P = camera.get_projection(aspect)  ;
                 location = glGetUniformLocation(program, "M");
@@ -358,7 +358,7 @@ void render_userModel(int color_mode){
         }
         else{
             //(set uniform variables of shaders for model i)
-            mat4 M = user_state[user].get_transf() ;
+            mat4 M = state[user].get_transf() ;
             mat4 V = camera.get_viewing() ;
             mat4 P = camera.get_projection(aspect)  ;
             location = glGetUniformLocation(program, "M");
@@ -368,6 +368,12 @@ void render_userModel(int color_mode){
             location = glGetUniformLocation(program, "V");
             glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(V)) ;
             draw_obj_model(user, color_mode, user+1);
+            
+            M = mat4(1.0f) ;
+            location = glGetUniformLocation(program, "M");
+            glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(M)) ;
+            draw_obj_model(BACK, color_mode, BACK+1);
+            
         }
     }
     if (color_mode != PICKING) {
@@ -375,17 +381,17 @@ void render_userModel(int color_mode){
     }
 }
 
-void mouse(int button, int state, int x, int y)
+void mouse(int button, int s, int x, int y)
 {
-    button_pressed[button] = state;
+    button_pressed[button] = s;
     mouse_pos[0] = x;
     mouse_pos[1] = y;
     
-    render_userModel(PICKING);
+    render(PICKING);
     glFlush();
 
 
-    if (state == GLUT_UP) {
+    if (s == GLUT_UP) {
         unsigned char res[4];
         int height = glutGet(GLUT_WINDOW_HEIGHT);
 
@@ -393,7 +399,13 @@ void mouse(int button, int state, int x, int y)
 
         if(user < 0 && ( res[0] == 1 || res[0] == 2)){
             user = res[0]-1 ;
-            user_state[user].x_pos = 0 ;
+            model_scales[user] = 0.1f ;
+            state[user].x_pos =  0.0f;
+            state[user].y_pos =  1.0f;
+            state[user].z_pos =  0.5f;
+            camera.eye.x = state[user].x_pos ;
+            camera.eye.y = state[user].y_pos * 0.5f ;
+            camera.eye.z = state[user].z_pos + 0.5f;
             printf("selet user model %d\n", res[0]) ;
         }
         
@@ -401,21 +413,45 @@ void mouse(int button, int state, int x, int y)
 }
 
 
-void keyboard(unsigned char key, int x, int y)
-{
-       switch (key) {
-//           case '1' :
-//           case '2' :
-//               shading_mode = key - '1' ;
-//               printf("shading mode : %d\n", shading_mode) ;
-//               glutPostRedisplay() ;
-//               break ;
-//
-//           case 'w' : show_wireframe = (show_wireframe == 0? 1: 0); printf("wireframe : %d\n", show_wireframe) ;glutPostRedisplay() ; break;
-//           case 'g' : printf("grid\n") ; show_grid = (show_grid == 0? 1: 0); glutPostRedisplay() ; break;
-//           case '+' : light_intense += 0.05f ; if(light_intense > 1.0f) light_intense = 1.0f ; printf("light intensity : %f\n", light_intense) ;glutPostRedisplay() ; break;
-//          case '-' : light_intense -= 0.05f ; if(light_intense < 0.0f) light_intense = 0.0f ; printf("light intensity : %f\n", light_intense) ;glutPostRedisplay() ; break;
-       }
+
+void cb_special(int key, int x, int y){
+    GLfloat d_move = 0.05f ;
+    int w = glutGet(GLUT_WINDOW_WIDTH);
+    int h = glutGet(GLUT_WINDOW_HEIGHT);
+    GLfloat dx, dy ;
+    if(user == -1) return ;
+    
+    if(key == GLUT_KEY_UP){
+        printf("up\n") ;
+        state[user].z_pos -= d_move ;
+        
+    }
+    else if(key == GLUT_KEY_DOWN){
+        printf("down\n") ;
+        state[user].z_pos += d_move ;
+      
+    }
+    else if(key == GLUT_KEY_RIGHT){
+        printf("right\n") ;
+        state[user].x_pos += d_move ;
+        dx = 1.f*(x - mouse_pos[0] - 50.0f) / w;
+        mat4 VT = transpose(camera.get_viewing());
+        camera.eye += vec3(-dx* VT[0]);
+        camera.center += vec3(-dx* VT[0]);
+
+    }
+    else if(key == GLUT_KEY_LEFT){
+        printf("left\n") ;
+        state[user].x_pos -= +d_move ;
+        dx = 1.f*(x - mouse_pos[0] + 50.0f) / w;
+        mat4 VT = transpose(camera.get_viewing());
+        camera.eye += vec3(-dx* VT[0]);
+        camera.center += vec3(-dx* VT[0]);
+    }
+
+    mouse_pos[0] = x;
+    mouse_pos[1] = y;
+    glutPostRedisplay();
 }
 
 void build_program(){
@@ -786,4 +822,21 @@ void get_rect_texcoord(GLvec &q){
     VSET2PP_2D(data, 1.0f, 0.0f);
     VSET2PP_2D(data, 0.0f, 0.0f);
     VSET2PP_2D(data, 0.0f, 1.0f);
+}
+
+void keyboard(unsigned char key, int x, int y)
+{
+       switch (key) {
+//           case '1' :
+//           case '2' :
+//               shading_mode = key - '1' ;
+//               printf("shading mode : %d\n", shading_mode) ;
+//               glutPostRedisplay() ;
+//               break ;
+//
+//           case 'w' : show_wireframe = (show_wireframe == 0? 1: 0); printf("wireframe : %d\n", show_wireframe) ;glutPostRedisplay() ; break;
+//           case 'g' : printf("grid\n") ; show_grid = (show_grid == 0? 1: 0); glutPostRedisplay() ; break;
+//           case '+' : light_intense += 0.05f ; if(light_intense > 1.0f) light_intense = 1.0f ; printf("light intensity : %f\n", light_intense) ;glutPostRedisplay() ; break;
+//          case '-' : light_intense -= 0.05f ; if(light_intense < 0.0f) light_intense = 0.0f ; printf("light intensity : %f\n", light_intense) ;glutPostRedisplay() ; break;
+       }
 }

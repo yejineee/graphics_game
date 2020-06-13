@@ -78,7 +78,6 @@ void main()
 {
     if(ColorMode == 0){
         gl_Position = M * vPosition;
-//        fColor = vColor;
         TexCoord = aTexCoord;
     }
     else if(ColorMode == 2){
