@@ -13,8 +13,8 @@
 		0E0B89B0248F9CB300BFF698 /* LoadShaders.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0E0B89AF248F9CB300BFF698 /* LoadShaders.cpp */; };
 		0E0B89B4248F9CCA00BFF698 /* tiny_obj_loader.cc in Sources */ = {isa = PBXBuildFile; fileRef = 0E0B89B3248F9CCA00BFF698 /* tiny_obj_loader.cc */; };
 		0E0B89C2248FB03200BFF698 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0E0B89C1248FB03200BFF698 /* main.cpp */; };
-		BB26D59A24937FF300D72CF2 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB26D59924937FF300D72CF2 /* GLUT.framework */; };
-		BB26D59B24937FF300D72CF2 /* GLUT.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BB26D59924937FF300D72CF2 /* GLUT.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		0E6A05C82495024900E14B64 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0B89A2248F9A1900BFF698 /* GLUT.framework */; };
+		0E6A05C92495024900E14B64 /* GLUT.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0B89A2248F9A1900BFF698 /* GLUT.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,13 +27,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		BB26D59C24937FF300D72CF2 /* Embed Frameworks */ = {
+		0E6A05CA2495024900E14B64 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				BB26D59B24937FF300D72CF2 /* GLUT.framework in Embed Frameworks */,
+				0E6A05C92495024900E14B64 /* GLUT.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -61,8 +61,21 @@
 		0E0B89EC248FCFED00BFF698 /* bixler.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bixler.obj; sourceTree = "<group>"; };
 		0E0B89ED248FCFF400BFF698 /* bixlerTexturedUVmap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bixlerTexturedUVmap.png; sourceTree = "<group>"; };
 		0E0B8A0F2492711100BFF698 /* ARC170_TXT_VERSION_4_D.tga */ = {isa = PBXFileReference; lastKnownFileType = file; path = ARC170_TXT_VERSION_4_D.tga; sourceTree = "<group>"; };
+		0E6A05E5249509EF00E14B64 /* wnd3b.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = wnd3b.jpg; sourceTree = "<group>"; };
+		0E6A05E624950AE400E14B64 /* tri-colonial_sector.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "tri-colonial_sector.mtl"; sourceTree = "<group>"; };
+		0E6A05E824950AE400E14B64 /* snd2_01.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = snd2_01.jpg; sourceTree = "<group>"; };
+		0E6A05E924950AE400E14B64 /* 1arw.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 1arw.jpg; sourceTree = "<group>"; };
+		0E6A05EA24950AE400E14B64 /* antenna.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = antenna.jpg; sourceTree = "<group>"; };
+		0E6A05EB24950AE400E14B64 /* Doc4b2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = Doc4b2.jpg; sourceTree = "<group>"; };
+		0E6A05EC24950AE400E14B64 /* bh2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = bh2.jpg; sourceTree = "<group>"; };
+		0E6A05ED24950AE400E14B64 /* gr1b2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gr1b2.jpg; sourceTree = "<group>"; };
+		0E6A05EE24950AE400E14B64 /* trr1b.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = trr1b.jpg; sourceTree = "<group>"; };
+		0E6A05EF24950AE500E14B64 /* tri-colonial sector.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "tri-colonial sector.mtl"; sourceTree = "<group>"; };
+		0E6A05F024950AE600E14B64 /* tri-colonial sector.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "tri-colonial sector.obj"; sourceTree = "<group>"; };
+		0EA917242496348300B3DF76 /* 10621_CoastGuardHelicopter.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 10621_CoastGuardHelicopter.mtl; sourceTree = "<group>"; };
+		0EA917252496348400B3DF76 /* HH65C.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = HH65C.jpg; sourceTree = "<group>"; };
+		0EA917262496348500B3DF76 /* 10621_CoastGuardHelicopter.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 10621_CoastGuardHelicopter.obj; sourceTree = "<group>"; };
 		BB26D59924937FF300D72CF2 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = ../../../../Downloads/GLUT.framework; sourceTree = "<group>"; };
-		BB26D5BF2494B51D00D72CF2 /* o2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = o2.jpg; sourceTree = "<group>"; };
 		BB26D5C02494B51D00D72CF2 /* o4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = o4.jpg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -73,7 +86,7 @@
 			files = (
 				0E0B89A7248F9A4C00BFF698 /* libGLEW.2.1.0.dylib in Frameworks */,
 				0E0B89AA248F9A7400BFF698 /* OpenGL.framework in Frameworks */,
-				BB26D59A24937FF300D72CF2 /* GLUT.framework in Frameworks */,
+				0E6A05C82495024900E14B64 /* GLUT.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,19 +117,26 @@
 				0E0B89AE248F9CAB00BFF698 /* loadobj.h */,
 				0E0B89B2248F9CCA00BFF698 /* stb_image.h */,
 				0E0B89C1248FB03200BFF698 /* main.cpp */,
+				0E6A05E5249509EF00E14B64 /* wnd3b.jpg */,
 				0E0B89BA248F9F7B00BFF698 /* ARC170.mtl */,
 				0E0B89B9248F9F7B00BFF698 /* ARC170.obj */,
+				0EA917242496348300B3DF76 /* 10621_CoastGuardHelicopter.mtl */,
+				0EA917262496348500B3DF76 /* 10621_CoastGuardHelicopter.obj */,
+				0EA917252496348400B3DF76 /* HH65C.jpg */,
 				0E0B89B3248F9CCA00BFF698 /* tiny_obj_loader.cc */,
 				0E0B89B1248F9CC900BFF698 /* tiny_obj_loader.h */,
 				0E0B8A0F2492711100BFF698 /* ARC170_TXT_VERSION_4_D.tga */,
 				0E0B89EB248FCFEB00BFF698 /* bixler.mtl */,
+				0E6A05E724950AE400E14B64 /* Maps */,
+				0E6A05EF24950AE500E14B64 /* tri-colonial sector.mtl */,
+				0E6A05F024950AE600E14B64 /* tri-colonial sector.obj */,
+				0E6A05E624950AE400E14B64 /* tri-colonial_sector.mtl */,
 				0E0B89EC248FCFED00BFF698 /* bixler.obj */,
 				0E0B89ED248FCFF400BFF698 /* bixlerTexturedUVmap.png */,
 				0E0B89C6248FB16A00BFF698 /* viewing.vert */,
 				0E0B89C7248FB17B00BFF698 /* viewing.frag */,
 				0E0B89AF248F9CB300BFF698 /* LoadShaders.cpp */,
 				0E0B89AB248F9C9A00BFF698 /* loadobj .cpp */,
-				BB26D5BF2494B51D00D72CF2 /* o2.jpg */,
 				BB26D5C02494B51D00D72CF2 /* o4.jpg */,
 			);
 			path = game;
@@ -133,6 +153,20 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		0E6A05E724950AE400E14B64 /* Maps */ = {
+			isa = PBXGroup;
+			children = (
+				0E6A05E824950AE400E14B64 /* snd2_01.jpg */,
+				0E6A05E924950AE400E14B64 /* 1arw.jpg */,
+				0E6A05EA24950AE400E14B64 /* antenna.jpg */,
+				0E6A05EB24950AE400E14B64 /* Doc4b2.jpg */,
+				0E6A05EC24950AE400E14B64 /* bh2.jpg */,
+				0E6A05ED24950AE400E14B64 /* gr1b2.jpg */,
+				0E6A05EE24950AE400E14B64 /* trr1b.jpg */,
+			);
+			path = Maps;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -143,7 +177,7 @@
 				0E0B8993248F99A800BFF698 /* Sources */,
 				0E0B8994248F99A800BFF698 /* Frameworks */,
 				0E0B8995248F99A800BFF698 /* CopyFiles */,
-				BB26D59C24937FF300D72CF2 /* Embed Frameworks */,
+				0E6A05CA2495024900E14B64 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -318,6 +352,7 @@
 					"$(inherited)",
 					"$(USER_LIBRARY_DIR)/Mobile\\ Documents/com~apple~CloudDocs/Downloads",
 					"$(USER_LIBRARY_DIR)/Mobile\\ Documents/com~apple~CloudDocs/Downloads",
+					"$(USER_LIBRARY_DIR)/Mobile\\ Documents/com~apple~CloudDocs/Downloads",
 				);
 				HEADER_SEARCH_PATHS = (
 					/usr/local/Cellar/glew/2.1.0_1/include,
@@ -338,6 +373,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
+					"$(USER_LIBRARY_DIR)/Mobile\\ Documents/com~apple~CloudDocs/Downloads",
 					"$(USER_LIBRARY_DIR)/Mobile\\ Documents/com~apple~CloudDocs/Downloads",
 					"$(USER_LIBRARY_DIR)/Mobile\\ Documents/com~apple~CloudDocs/Downloads",
 				);
