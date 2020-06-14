@@ -62,7 +62,7 @@ p[i3+2] = (float)(vz) ; \
 GLint program ;
 GLint shading_mode = 2 ;
 void build_program() ;
-
+bool fin = false ;
 
 void keyboard(unsigned char key, int x, int y) ;
 void display() ;
@@ -213,6 +213,8 @@ bool is_tex_valid = false;
 int w_width;
 int w_height;
 
+float z_bottom = 1.4f , z_top = -z_bottom, right_most = 1.1f, left_most = -right_most ;
+
 int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
@@ -247,8 +249,9 @@ void init(){
 
     srand(time(NULL)) ;
     for(int i = 0 ; i < n_heli ; i++){
-        heli_state[i].x_pos = -1.0f + rand() % 200 * 0.01 ;
-        heli_state[i].z_pos = -1.6f - rand() % 500 * 0.01 ;;
+        heli_state[i].x_pos = left_most + rand() % 200 * 0.01 ;
+      //  heli_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
+         heli_state[i].z_pos = z_bottom - rand() % 500 * 0.01 ;
     }
 
     for (unsigned int k = 0; k < NUM_OF_MODELS; ++k)
@@ -356,26 +359,37 @@ void render(int color_mode){
             }
         }
         else{
-            //(set uniform variables of shaders for model i)
-            M = state[user].get_transf() ;
-            glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
-            draw_obj_model(user, color_mode, user+1);
-            
-            for(int i = 0 ; i < n_heli ; i++){
-                M = heli_state[i].get_transf() ;
+            if(!fin){
+                M = state[user].get_transf() ;
                 glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
-                draw_obj_model(HELI, color_mode, HELI+1);
-                heli_state[i].z_pos < 1.5f ? heli_state[i].z_pos += 0.01f : heli_state[i].z_pos = -1.6f - rand() % 500 * 0.01 ;
+                draw_obj_model(user, color_mode, user+1);
+                
+                for(int i = 0 ; i < n_heli ; i++){
+                    M = heli_state[i].get_transf() ;
+                    glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
+                    draw_obj_model(HELI, color_mode, HELI+1);
+//                    float around = 0.01f ;
+//                    if((heli_state[i].z_pos + around >= state[user].z_pos && heli_state[i].z_pos - around <= state[user].z_pos)
+//                       || (heli_state[i].x_pos + around >= state[user].x_pos && heli_state[i].x_pos - around <= state[user].x_pos)){
+//                        fin = true ;
+//                        printf("!!! user z : %f, plane z : %f, user x : %f, plane x : %f\n",  state[user].z_pos, heli_state[i].z_pos,
+//                                state[user].x_pos, heli_state[i].x_pos) ;
+//                        break ;
+//                    }
+//               //     heli_state[i].z_pos < z_bottom+0.2f ? heli_state[i].z_pos += 0.01f : heli_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
+
+                }
+
             }
-            
+            else{
+               
+            }
         }
     }
     if (color_mode != PICKING) {
         glutSwapBuffers();
     }
 }
-
-
 
 void mouse(int button, int s, int x, int y)
 {
@@ -395,9 +409,8 @@ void mouse(int button, int s, int x, int y)
         if(user < 0 && ( res[0] == 1 || res[0] == 2)){
             user = res[0]-1 ;
             state[user].theta = 0.0f ;
-            state[user].x_pos =  0.0f;
-            state[user].y_pos =  -1.0f ; // y : (bottom)-1 ~ (top) 2
-            state[user].z_pos =  0.5f;
+            state[user].x_pos =  0.0f ;
+            state[user].z_pos =  z_bottom ;
             printf("selet user model %d\n", res[0]) ;
         }
         
@@ -405,30 +418,26 @@ void mouse(int button, int s, int x, int y)
 }
 
 
-
 void cb_special(int key, int x, int y){
     GLfloat d_move = 0.08f ;
-    // z : top  -2.0f, bottom : 0.6f
-    // x : rigth : 1 , left : -1
-    int w = glutGet(GLUT_WINDOW_WIDTH);
-    int h = glutGet(GLUT_WINDOW_HEIGHT);
+
 
     if(user == -1) return ;
     
-    if(key == GLUT_KEY_UP){;
-    -2.0f > state[user].z_pos - d_move ? state[user].z_pos = -2.0f : state[user].z_pos -= d_move ;
+    if(key == GLUT_KEY_UP){
+    z_top > state[user].z_pos - d_move ? state[user].z_pos = z_top : state[user].z_pos -= d_move ;
              //   printf("z_pos : %f\n", state[user].z_pos) ;
     }
     else if(key == GLUT_KEY_DOWN){
-    0.6f < state[user].z_pos + d_move ? state[user].z_pos =  0.6f: state[user].z_pos += d_move ;
+    z_bottom < state[user].z_pos + d_move ? state[user].z_pos =  z_bottom : state[user].z_pos += d_move ;
            //   printf("z_pos : %f\n", state[user].z_pos) ;
     }
     else if(key == GLUT_KEY_RIGHT){
-    1.0f < state[user].x_pos + d_move ? state[user].x_pos =  1.0f : state[user].x_pos += d_move  ;
+    right_most < state[user].x_pos + d_move ? state[user].x_pos =  right_most : state[user].x_pos += d_move  ;
      //   printf("x_pos : %f\n", state[user].x_pos) ;
     }
     else if(key == GLUT_KEY_LEFT){
-    -1.0f > state[user].x_pos - d_move ? state[user].x_pos =  -1.0f : state[user].x_pos -= d_move  ;
+    left_most > state[user].x_pos - d_move ? state[user].x_pos =  left_most : state[user].x_pos -= d_move  ;
     //    printf("x_pos : %f\n", state[user].x_pos) ;
     }
 
