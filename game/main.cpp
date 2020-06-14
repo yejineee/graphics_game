@@ -250,8 +250,7 @@ void init(){
     srand(time(NULL)) ;
     for(int i = 0 ; i < n_heli ; i++){
         heli_state[i].x_pos = left_most + rand() % 200 * 0.01 ;
-      //  heli_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
-         heli_state[i].z_pos = z_bottom - rand() % 500 * 0.01 ;
+        heli_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
     }
 
     for (unsigned int k = 0; k < NUM_OF_MODELS; ++k)
@@ -368,21 +367,20 @@ void render(int color_mode){
                     M = heli_state[i].get_transf() ;
                     glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
                     draw_obj_model(HELI, color_mode, HELI+1);
-//                    float around = 0.01f ;
-//                    if((heli_state[i].z_pos + around >= state[user].z_pos && heli_state[i].z_pos - around <= state[user].z_pos)
-//                       || (heli_state[i].x_pos + around >= state[user].x_pos && heli_state[i].x_pos - around <= state[user].x_pos)){
-//                        fin = true ;
-//                        printf("!!! user z : %f, plane z : %f, user x : %f, plane x : %f\n",  state[user].z_pos, heli_state[i].z_pos,
-//                                state[user].x_pos, heli_state[i].x_pos) ;
-//                        break ;
-//                    }
-//               //     heli_state[i].z_pos < z_bottom+0.2f ? heli_state[i].z_pos += 0.01f : heli_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
+                    float around = 0.05f ;
+                    if(heli_state[i].z_pos + around >= state[user].z_pos && heli_state[i].z_pos - around <= state[user].z_pos
+                       && heli_state[i].x_pos + around >= state[user].x_pos && heli_state[i].x_pos - around <= state[user].x_pos){
+                        fin = true ;
+                        printf("!!! user z : %f, plane z : %f\n",  state[user].z_pos, heli_state[i].z_pos) ;
+                        break ;
+                    }
+                    heli_state[i].z_pos < z_bottom+0.2f ? heli_state[i].z_pos += 0.01f : heli_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
 
                 }
 
             }
             else{
-               
+               // game finished
             }
         }
     }
