@@ -1,8 +1,10 @@
+#pragma once
+
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glew.h>
-#include "/Users/yang-yejin/Library/Mobile Documents/com~apple~CloudDocs/Downloads/GLUT.framework/Headers/glut.h"
+#include "/Users/im-aron/Downloads/GLUT.framework/Headers/glut.h"
 #include "LoadShaders.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -58,6 +60,12 @@ p[i3+2] = (float)(vz) ; \
 (flag) == GL_NEAREST_MIPMAP_LINEAR|| \
 (flag) == GL_NEAREST_MIPMAP_NEAREST)
 
+#define VSET2(v, a, b, c) do {(v)[0] = (a); (v)[1] = (b); (v)[2] = (c);} while(0)
+#define VSET2PP(v, a, b, c) do {VSET2(v, a, b, c); v += 3;} while(0)
+
+#define VSET2_2D(v, a, b) do {(v)[0] = (a); (v)[1] = (b);} while(0)
+#define VSET2PP_2D(v, a, b) do {VSET2_2D(v, a, b); v += 2;} while(0)
+
 
 GLint program ;
 GLint shading_mode = 2 ;
@@ -94,6 +102,218 @@ void render(int color_mode) ;
 GLuint generate_tex(const char* tex_file_path, GLint min_filter,GLint mag_filter) ;
 void draw_obj_model(int model_idx, int color_mode, int object_code) ;
 GLuint generate_background();
+
+
+void get_torus_3d(
+    std::vector<GLfloat>& p,
+    std::vector<GLfloat>& normals,
+    std::vector<std::vector<GLuint>>& side_idx,
+    GLfloat radius0,
+    GLfloat radius1,
+    GLint longs,
+    GLint lats);
+
+void get_sphere_3d(
+    std::vector<GLfloat>& p,
+    std::vector<GLfloat>& normals,
+    GLfloat r,
+    GLint lats,
+    GLint longs);
+
+struct ModelState{
+    glm::vec3 pos;
+    glm::vec3 scale;
+    GLfloat theta;
+    
+    ModelState() : pos(0), scale(1), theta(0){}
+    
+    glm::mat4 get_transformation()
+    {
+        glm::mat4 M(1.0f);
+        M = glm::translate(M, pos);
+        M = glm::rotate(M, theta, glm::vec3(0.0f, 1.0f, 0.0f));
+        M = glm::scale(M, scale);
+        return M;
+    }
+}
+model_state;
+
+class Model{
+public:
+    GLuint vao, buffs[2];
+    GLvec vtx_pos;
+    GLvec vtx_nml;
+//    GLvec vtx_clrs;
+    float left_rad;
+    GLfloat x_pos, y_pos, z_pos ;
+    
+    Model():
+        y_pos(0),
+        z_pos(0),
+        x_pos(0){}
+    
+    virtual void init(GLint program)
+    {
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+        
+        GLchar* attri_name[2] = {"vPosition", "vNormal"};
+        GLvec* vtx_list[2] = {&vtx_pos, &vtx_nml};
+        
+        glGenBuffers(2, buffs);
+        for (int i = 0; i < 2; i++){
+            bind_buffer(buffs[i], *vtx_list[i], program, attri_name[i], 3);
+        }
+    }
+    
+    glm::mat4 get_transf()
+    {
+        mat4 M(1.0f);
+        M = translate(M, vec3(x_pos, y_pos, z_pos));
+//        M = rotate(M, theta, vec3(0.0f, 1.0f, 0.0f)) ;
+        return M;
+    }
+    
+    virtual void draw() {}
+};
+
+struct SpherePrimitive : public Model
+{
+    GLuint element_buff;
+    std::vector<unsigned int> idx_list;
+    
+    SpherePrimitive(GLfloat radius, GLint subh, GLint suba)
+    {
+        get_sphere_3d(vtx_pos, vtx_nml, radius, subh, suba);
+    }
+
+    virtual void init(GLint program)
+    {
+        Model::init(program);
+        
+        auto num_of_vertices = vtx_pos.size() / 3;
+        idx_list.resize(num_of_vertices);
+        for(GLuint i = 0; i < idx_list.size(); ++i){
+            idx_list[i] = i;
+        }
+        glGenBuffers(1, &element_buff);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buff);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*num_of_vertices, idx_list.data(), GL_STATIC_DRAW);
+    }
+
+    virtual void draw()
+    {
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buff);
+        glDrawElements(GL_TRIANGLES, idx_list.size(), GL_UNSIGNED_INT, NULL);
+    }
+};
+
+struct TorusPrimitive : public Model
+{
+    GLuint element_buffs[15];
+    GLint n;
+    std::vector<std::vector<GLuint>> idx_list;
+
+    TorusPrimitive(GLfloat r0, GLfloat r1, GLint na, GLint nh)
+    {
+        get_torus_3d(vtx_pos, vtx_nml, idx_list, r0, r1, na, nh);
+    }
+
+    virtual void init(GLint program)
+    {
+        Model::init(program);
+
+        n = idx_list.size();
+        glGenBuffers(n, element_buffs);
+        for (int i = 0; i < n; i++){
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffs[i]);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*idx_list[i].size(), idx_list[i].data(), GL_STATIC_DRAW);
+        }
+    }
+
+    virtual void draw()
+    {
+        glBindVertexArray(vao);
+        for (int i = 0; i < n; i++){
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffs[i]);
+            glDrawElements(GL_TRIANGLE_STRIP, idx_list[i].size(), GL_UNSIGNED_INT, NULL);
+        }
+    }
+};
+
+struct Missile : public Model
+{
+    TorusPrimitive* torus;
+    SpherePrimitive* sphere;
+    GLfloat x_siz, y_siz, z_siz;
+    
+    Missile(
+        SpherePrimitive* sphere,
+        TorusPrimitive* torus, GLfloat x_siz, GLfloat y_siz, GLfloat z_siz)
+    {
+        this->torus = torus;
+        this->sphere = sphere;
+        this->x_siz = x_siz;
+        this->y_siz = y_siz;
+        this->z_siz = z_siz;
+    }
+
+    virtual void init(GLint program){
+        left_rad = 0.2f;    // for left wheel rotate
+    }
+
+    glm::mat4 transf(
+        GLfloat sx, GLfloat sy, GLfloat sz,
+        GLfloat tx, GLfloat ty, GLfloat tz,
+        glm::mat4* T_pre = NULL,
+        glm::mat4* T_post = NULL,
+        bool set_uniform = true)
+    {
+        using namespace glm;
+        mat4 T = model_state.get_transformation();
+        T = translate(T, vec3(tx, ty, tz));
+        T = scale(T, vec3(sx, sy, sz));
+        if(T_pre) T = (*T_pre) * T;
+        if(T_post) T = T * (*T_post);
+        if(set_uniform){
+            GLuint location = glGetUniformLocation(program, "M") ;
+            glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(T));
+        }
+        return T;
+    }
+
+    virtual void draw()
+    {
+        left_rad += 0.3f;
+        using namespace glm;
+        
+        // for torus rotation
+        mat4 Ry = rotate(mat4(1.0f), left_rad, vec3(1.0f, 1.0f, 0.0f));
+
+        // sphere_center
+        glUniform1i(UVARS("ColorMode"), 7);
+        transf(x_siz, y_siz, z_siz, x_pos, y_pos, z_pos);
+        sphere->draw();
+        
+        glUniform1i(UVARS("ColorMode"), 6);
+        mat4 R_fr = rotate(mat4(1.0f), radians(90.0f), vec3(1, 0, 1)) * Ry;
+        transf(x_siz*1.01f, y_siz*1.003f, z_siz*1.003f, x_pos, y_pos, z_pos, NULL, &R_fr);
+        torus->draw();
+
+        mat4 R_fl = rotate(mat4(1.0f), radians(-90.0f), vec3(0, 1, 1)) * Ry;
+        transf(x_siz*1.01f, y_siz*1.003f, z_siz*1.003f, x_pos, y_pos, z_pos, NULL, &R_fl);
+        torus->draw();
+    }
+};
+
+SpherePrimitive sphere(0.7f, 15, 15);
+TorusPrimitive torus(1.0f, 0.2f, 30, 10);
+
+std::vector<Model*> models;
+const int n_missile = 20;
+
+GLfloat d_move = 0.08f ;
 
  struct State
 {
@@ -158,30 +378,31 @@ struct Camera{
 };
 Camera camera ;
 int user = -1 ;
-enum {MODEL_USER1, MODEL_USER2, HELI, NUM_OF_MODELS};
+enum {MODEL_USER1, MODEL_USER2, HELI, HEART, NUM_OF_MODELS};
 enum {PICKING=1, PHONG, GOURAUD} ;
 
 //path 지우지 말고 주석처리해놓기!
-const char* back2d_path = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/o4.jpg" ;
-const char* vert_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/viewing.vert" ;
-const char* frag_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/viewing.frag" ;
-const char* base_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/" ;
+//const char* back2d_path = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/o4.jpg" ;
+//const char* vert_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/viewing.vert" ;
+//const char* frag_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/viewing.frag" ;
+//const char* base_dir = "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/" ;
+//const char* model_files[NUM_OF_MODELS] = {
+//"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/ARC170.obj",
+//"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/bixler.obj",
+//"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/10621_CoastGuardHelicopter.obj"
+//   };
+
+const char* back2d_path = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/o4.jpg" ;
+const char* vert_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/viewing.vert" ;
+const char* frag_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/viewing.frag" ;
+const char* base_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/" ;
 const char* model_files[NUM_OF_MODELS] = {
-"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/ARC170.obj",
-"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/bixler.obj",
-"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/10621_CoastGuardHelicopter.obj"
+"/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/ARC170.obj",
+"/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/bixler.obj",
+"/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/10621_CoastGuardHelicopter.obj",
+"/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/12190_Heart_v1_L3.obj"
    };
-//const char* model_files[NUM_OF_MODELS] = {
-//   "/Users/yang-yejin/Desktop/graphics/term_tex/game/game/ARC170.obj",
-//"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/bixler.obj"
-//   };
-//const char* vert_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/viewing.vert" ;
-//const char* frag_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/viewing.frag" ;
-//const char* base_dir = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/" ;
-//const char* model_files[NUM_OF_MODELS] = {
-//   "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/ARC170.obj",
-//"/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/bixler.obj"
-//   };
+
 GLuint vao[NUM_OF_MODELS], vbo[NUM_OF_MODELS][3];
 
 GLuint texture1;
@@ -195,10 +416,12 @@ void get_rect_3d(GLvec &p, GLfloat width, GLfloat height, GLfloat z);
 void get_vertex_color(GLvec &color, GLuint n, GLfloat r, GLfloat g, GLfloat b);
 void get_rect_texcoord(GLvec &q);
 
-float model_scales[NUM_OF_MODELS] = {0.2f, 0.2f, 0.2f};
+float model_scales[NUM_OF_MODELS] = {0.3f, 0.3f, 0.2f, 0.1f};
 State state[NUM_OF_MODELS];
 const int n_heli = 10 ;
 State heli_state[n_heli] ;
+const int n_heart = 2;
+State heart_state[n_heart];
 vector<real_t> vertices[NUM_OF_MODELS];
 vector<real_t> normals[NUM_OF_MODELS];
 vector<real_t> colors[NUM_OF_MODELS];
@@ -239,11 +462,28 @@ int main(int argc, char** argv)
 }
 
 void init(){
+    models.push_back(&sphere);
+    models.push_back(&torus);
+    float size = 0.02f;
+    
+    build_program();
+    
+    for(int i = 0 ; i < n_missile ; i++){
+        float m_x_pos = left_most + rand() % 200 * 0.01 ;
+        float m_z_pos = z_top - rand() % 500 * 0.01 ;
+        models.push_back(new Missile(&sphere, &torus, size, size, size));
+        models[i+2]->x_pos = m_x_pos;
+        models[i+2]->z_pos = m_z_pos;
+    }
+    
+    int num_of_models = (int)models.size();
+    for (int i = 0; i < num_of_models; i++){
+        models[i]->init(program);
+    }
+    
     w_width = glutGet(GLUT_WINDOW_WIDTH) ;
     w_height = glutGet(GLUT_WINDOW_HEIGHT) ;
     
-    build_program();
-
     state[MODEL_USER1].x_pos = -0.2f ;
     state[MODEL_USER2].x_pos = 0.2f ;
 
@@ -252,20 +492,25 @@ void init(){
         heli_state[i].x_pos = left_most + rand() % 200 * 0.01 ;
         heli_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
     }
-
+    
+    for(int i = 0 ; i < n_heart ; i++){
+        heart_state[i].x_pos = left_most + rand() % 200 * 0.01 ;
+        heart_state[i].z_pos = z_top - rand() % 1000 * 0.01 ;
+    }
+    
     for (unsigned int k = 0; k < NUM_OF_MODELS; ++k)
         {
             attrib_t attrib;
             is_obj_valid = load_obj(model_files[k], base_dir, vertices[k], normals[k], vertex_map[k], material_map[k], attrib, shapes[k], materials[k], model_scales[k]);
-            
+
             glActiveTexture(GL_TEXTURE0);
             is_tex_valid = load_tex(base_dir, texcoords[k],
             texmap[k], attrib.texcoords, shapes[k], materials[k], GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR);
             printf("%d ](%s), obj valid : %d, tex valid : %d\n", k, model_files[k], is_obj_valid, is_tex_valid) ;
-    
+
     }
     glGenVertexArrays(NUM_OF_MODELS, vao) ;
-    
+
     for(int i = 0 ; i < NUM_OF_MODELS ; i++){
         glBindVertexArray(vao[i]) ;
         glGenBuffers(3, vbo[i]) ;
@@ -274,8 +519,7 @@ void init(){
         bind_buffer(vbo[i][2], texcoords[i], program, "vTexcoord", 2);
     }
 
-
-    get_rect_3d(rec_vertices, w_width/1000, w_height/1000, 0.5f);
+    get_rect_3d(rec_vertices, 2, 2, 0.5f);
     get_vertex_color(rec_colors, rec_vertices.size() / 2, 0.8f, 0.2f, 0.5f);
     get_rect_texcoord(rec_texcoord);
     generate_background();
@@ -288,7 +532,6 @@ void init(){
     bind_buffer(rec_vbo[2], rec_texcoord, program, "aTexCoord", 2);
 
 
-    
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
@@ -301,6 +544,7 @@ void init(){
 
 void display()
 {
+
     if(user < 0){
         render(shading_mode) ;
         glFlush();
@@ -313,21 +557,24 @@ void display()
         glFlush() ;
     }
     
-    
     glutPostRedisplay();
      
 }
 
 
 void render(int color_mode){
+    using namespace glm;
     
     glClearColor(1.f, 1.f, 1.f, 1.0f);
+    GLuint location, M_location ;
+    float aspect = 1.0f * w_width / w_height;
+    
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    
-    GLint location, M_location ;
-    double aspect = 1.0 * w_width / w_height ;
-    
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(1, 1);
+
 
     if (is_obj_valid) {
         mat4 M(1.0f);
@@ -339,7 +586,7 @@ void render(int color_mode){
         glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(P)) ;
         location = glGetUniformLocation(program, "V");
         glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(V)) ;
-        
+
         glUniform1i(UVARS("ColorMode"), 0);
         glBindVertexArray(rec_vao);
         glActiveTexture(GL_TEXTURE0);
@@ -347,7 +594,6 @@ void render(int color_mode){
 
         glUniform1i(UVARS("ourTexture"), 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        
         if(user == -1){
             for (int i = 0; i < 2; ++i)
             {
@@ -363,6 +609,21 @@ void render(int color_mode){
                 glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
                 draw_obj_model(user, color_mode, user+1);
                 
+                for(int i = 0 ; i < n_missile ; i++){
+                    M = models[i+2]->get_transf();
+                    glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
+                    models[i+2]->draw();
+                    float around = 0.05f ;
+                    if(models[i+2]->z_pos + around >= state[user].z_pos && models[i+2]->z_pos - around <= state[user].z_pos
+                       && models[i+2]->x_pos + around >= state[user].x_pos && models[i+2]->x_pos - around <= state[user].x_pos){
+                        fin = true ;
+                        printf("!!! user z : %f, plane z : %f\n",  state[user].z_pos, models[i+2]->z_pos) ;
+                        break ;
+                    }
+                    models[i+2]->z_pos < z_bottom+0.2f ? models[i+2]->z_pos += rand() % 500 * 0.00005 : models[i+2]->z_pos = z_top - rand() % 500 * 0.01 ;
+
+                }
+                
                 for(int i = 0 ; i < n_heli ; i++){
                     M = heli_state[i].get_transf() ;
                     glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
@@ -376,6 +637,20 @@ void render(int color_mode){
                     }
                     heli_state[i].z_pos < z_bottom+0.2f ? heli_state[i].z_pos += 0.01f : heli_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
 
+                }
+                
+                for(int i = 0 ; i < n_heart ; i++){
+                    M = heart_state[i].get_transf() ;
+                    glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
+                    draw_obj_model(HEART, color_mode, HEART+1);
+                    float around = 0.05f ;
+                    if(heart_state[i].z_pos + around >= state[user].z_pos && heart_state[i].z_pos - around <= state[user].z_pos
+                       && heart_state[i].x_pos + around >= state[user].x_pos && heart_state[i].x_pos - around <= state[user].x_pos){
+                        d_move += 0.02f;
+                        printf("!!! user z : %f, plane z : %f\n", state[user].z_pos, heart_state[i].z_pos) ;
+                        heart_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
+                    }
+                    heart_state[i].z_pos < z_bottom+0.2f ? heart_state[i].z_pos += 0.03f : heart_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
                 }
 
             }
@@ -417,9 +692,7 @@ void mouse(int button, int s, int x, int y)
 
 
 void cb_special(int key, int x, int y){
-    GLfloat d_move = 0.08f ;
-
-
+//    GLfloat d_move = 0.08f ;
     if(user == -1) return ;
     
     if(key == GLUT_KEY_UP){
@@ -768,11 +1041,6 @@ void cb_main_menu(int value) {
     else if(value == 2 || value == 3) shading_mode = value ;
     glutPostRedisplay() ;
 }
-#define VSET2(v, a, b, c) do {(v)[0] = (a); (v)[1] = (b); (v)[2] = (c);} while(0)
-#define VSET2PP(v, a, b, c) do {VSET2(v, a, b, c); v += 3;} while(0)
-
-#define VSET2_2D(v, a, b) do {(v)[0] = (a); (v)[1] = (b);} while(0)
-#define VSET2PP_2D(v, a, b) do {VSET2_2D(v, a, b); v += 2;} while(0)
 
 void get_rect_3d(GLvec &p, GLfloat width, GLfloat height, GLfloat z)
 {
@@ -829,4 +1097,189 @@ void keyboard(unsigned char key, int x, int y)
 //           case '+' : light_intense += 0.05f ; if(light_intense > 1.0f) light_intense = 1.0f ; printf("light intensity : %f\n", light_intense) ;glutPostRedisplay() ; break;
 //          case '-' : light_intense -= 0.05f ; if(light_intense < 0.0f) light_intense = 0.0f ; printf("light intensity : %f\n", light_intense) ;glutPostRedisplay() ; break;
        }
+}
+
+void get_cube_3d(std::vector<GLfloat>& p, std::vector<GLfloat>& normals, GLfloat lx, GLfloat ly, GLfloat lz)
+{
+    printf("get_cube_3d\n");
+    static const GLfloat cube_vertices[] = {
+        0.5f, 0.5f,-0.5f,   -0.5f,-0.5f,-0.5f,   -0.5f, 0.5f,-0.5f,
+        0.5f, 0.5f,-0.5f,    0.5f,-0.5f,-0.5f,   -0.5f,-0.5f,-0.5f,
+       -0.5f,-0.5f,-0.5f,   -0.5f,-0.5f, 0.5f,   -0.5f, 0.5f, 0.5f,
+       -0.5f,-0.5f,-0.5f,   -0.5f, 0.5f, 0.5f,   -0.5f, 0.5f,-0.5f,
+        0.5f,-0.5f, 0.5f,   -0.5f,-0.5f,-0.5f,    0.5f,-0.5f,-0.5f,
+        0.5f,-0.5f, 0.5f,   -0.5f,-0.5f, 0.5f,   -0.5f,-0.5f,-0.5f,
+       -0.5f, 0.5f, 0.5f,   -0.5f,-0.5f, 0.5f,    0.5f,-0.5f, 0.5f,
+        0.5f, 0.5f, 0.5f,   -0.5f, 0.5f, 0.5f,    0.5f,-0.5f, 0.5f,
+        0.5f, 0.5f, 0.5f,    0.5f,-0.5f,-0.5f,    0.5f, 0.5f,-0.5f,
+        0.5f,-0.5f,-0.5f,    0.5f, 0.5f, 0.5f,    0.5f,-0.5f, 0.5f,
+        0.5f, 0.5f, 0.5f,    0.5f, 0.5f,-0.5f,   -0.5f, 0.5f,-0.5f,
+        0.5f, 0.5f, 0.5f,   -0.5f, 0.5f,-0.5f,   -0.5f, 0.5f, 0.5f,
+    };
+
+    p.resize(sizeof(cube_vertices) / sizeof(GLfloat));
+    memcpy(p.data(), cube_vertices, sizeof(cube_vertices));
+    GLuint n = p.size()/3;
+    for(int i = 0; i < n; i++){
+        p[3 * i + 0] *= lx;
+        p[3 * i + 1] *= ly;
+        p[3 * i + 2] *= lz;
+    }
+    
+    // Compute normals
+    normals.resize(n * 3);
+    float* cursor = normals.data();
+
+    // For vertices on the side at z = -0.5
+    for (int i = 0; i < 6; ++i, cursor += 3) { cursor[0] = 0;  cursor[1] = 0;  cursor[2] = -1;}
+    // For vertices on the side at x = -0.5
+    for (int i = 0; i < 6; ++i, cursor += 3) { cursor[0] = -1; cursor[1] = 0;  cursor[2] = 0; }
+    // For vertices on the side at y = -0.5
+    for (int i = 0; i < 6; ++i, cursor += 3) { cursor[0] = 0;  cursor[1] = -1; cursor[2] = 0; }
+    // For vertices on the side at z = 0.5
+    for (int i = 0; i < 6; ++i, cursor += 3) { cursor[0] = 0;  cursor[1] = 0;  cursor[2] = 1; }
+    // For vertices on the side at x = 0.5
+    for (int i = 0; i < 6; ++i, cursor += 3) { cursor[0] = 1;  cursor[1] = 0;  cursor[2] = 0; }
+    // For vertices on the side at y = 0.5
+    for (int i = 0; i < 6; ++i, cursor += 3) { cursor[0] = 0;  cursor[1] = 1;  cursor[2] = 0; }
+}
+
+void get_sphere_3d(std::vector<GLfloat>& p, std::vector<GLfloat>& normals, GLfloat r, GLint subh, GLint suba)
+{
+    for(int i = 1; i <= subh; ++i){
+        double theta0 = M_PI * (i - 1) / subh;
+        double theta1 = M_PI * i / subh;
+
+        double y0 = r * cos(theta0);
+        double rst0 = r * sin(theta0);
+        double y1 = r * cos(theta1);
+        double rst1 = r * sin(theta1);
+
+        for(int j = 1; j <= suba; ++j){
+            double phi0 = 2 * M_PI * (j - 1) / suba;
+            double phi1 = 2 * M_PI * j / suba;
+
+            double cp0 = cos(phi0);
+            double sp0 = sin(phi0);
+            double cp1 = cos(phi1);
+            double sp1 = sin(phi1);
+
+            float vx0, vy0, vz0, vx1, vy1, vz1;
+            float vx2, vy2, vz2, vx3, vy3, vz3;
+
+            FSET_VTX3(vx0, vy0, vz0, sp0*rst0, y0, cp0*rst0);
+            FSET_VTX3(vx1, vy1, vz1, sp0*rst1, y1, cp0*rst1);
+            FSET_VTX3(vx2, vy2, vz2, sp1*rst0, y0, cp1*rst0);
+            FSET_VTX3(vx3, vy3, vz3, sp1*rst1, y1, cp1*rst1);
+
+            if(i < subh){
+                //first triangle (v0 - v1 - v3)
+                FPUSH_VTX3(p, vx0, vy0, vz0);
+                FPUSH_VTX3(p, vx1, vy1, vz1);
+                FPUSH_VTX3(p, vx3, vy3, vz3);
+                FPUSH_VTX3(normals, vx0/r, vy0/r, vz0/r);
+                FPUSH_VTX3(normals, vx1/r, vy1/r, vz1/r);
+                FPUSH_VTX3(normals, vx3/r, vy3/r, vz3/r);
+            }
+
+            if(1 < i){
+                //second triangle (v3 - v2 - v0)
+                FPUSH_VTX3(p, vx3, vy3, vz3);
+                FPUSH_VTX3(p, vx2, vy2, vz2);
+                FPUSH_VTX3(p, vx0, vy0, vz0);
+                FPUSH_VTX3(normals, vx3/r, vy3/r, vz3/r);
+                FPUSH_VTX3(normals, vx2/r, vy2/r, vz2/r);
+                FPUSH_VTX3(normals, vx0/r, vy0/r, vz0/r);
+            }
+        }
+    }
+}
+
+void get_cone_3d(std::vector<GLfloat>& p, std::vector<GLfloat>& normals, std::vector<GLuint>& side_idx, std::vector<GLuint>& bottom_idx, GLfloat radius, GLfloat height, GLint n)
+{
+    GLfloat half_height = height / 2;
+    GLfloat theta, x, z;
+
+    FPUSH_VTX3(p, 0, half_height, 0);    // top vertex
+    FPUSH_VTX3(normals, 0, 1, 0);
+    side_idx.push_back(0);
+    for (int i = 0; i <= n; ++i){
+        theta = (GLfloat)(2.0 * M_PI * i / n);
+        x = radius * sin(theta);
+        z = radius * cos(theta);
+        FPUSH_VTX3(p, x, -half_height, z);
+        FPUSH_VTX3(normals, x/radius, 0, z/radius);
+        side_idx.push_back(i+1);
+        bottom_idx.push_back(n+2-i);
+    }
+    FPUSH_VTX3(p, 0, -half_height, 0);  // bottom-center vertex
+    FPUSH_VTX3(normals, 0, -1, 0);
+    bottom_idx.push_back(1);
+    for (int i = 0; i <= n; ++i){
+        theta = (GLfloat)(2.0 * M_PI * i / n);
+        x = radius * sin(theta);
+        z = radius * cos(theta);
+        FPUSH_VTX3(p, x, -half_height, z);
+        FPUSH_VTX3(normals, 0, -1, 0);
+        bottom_idx.push_back(n+2+i);
+    }
+    bottom_idx.push_back(2*n+3);
+}
+
+void get_cylinder_3d(std::vector<GLfloat>& p, std::vector<GLfloat>& normals, std::vector<GLuint>& side_idx, std::vector<GLuint>& top_idx, std::vector<GLuint>& bottom_idx, GLfloat radius, GLfloat height, GLint n)
+{
+
+    GLfloat half_height = height / 2;
+    GLfloat theta, x, z;
+    p.resize(3 * (4 * n + 5));
+    normals.resize(3 * (4 * n + 5));
+
+    FPUSH_VTX3_AT(p, 0, 0, half_height, 0);
+    FPUSH_VTX3_AT(normals, 0, 0, 1, 0);
+    top_idx.push_back(0);
+    bottom_idx.push_back(3*n+4);
+    for(int i = 0; i <= n; i++){
+        theta = (GLfloat)(2.0 * M_PI * i / n);
+        x = radius * sin(theta);
+        z = radius * cos(theta);
+        FPUSH_VTX3_AT(p, i+1, x, half_height, z);
+        FPUSH_VTX3_AT(p, 3*n+5+i, x, -half_height, z);
+        FPUSH_VTX3_AT(p, n+2*i+2, x,  half_height, z);
+        FPUSH_VTX3_AT(p, n+2*i+3, x, -half_height, z);
+        FPUSH_VTX3_AT(normals, i+1, 0, 1, 0);
+        FPUSH_VTX3_AT(normals, 3*n+5+i, 0, -1, 0);
+        FPUSH_VTX3_AT(normals, n+2*i+2, x/radius,  1, z/radius);
+        FPUSH_VTX3_AT(normals, n+2*i+3, x/radius, -1, z/radius);
+
+        side_idx.push_back(n+2*i+2);
+        side_idx.push_back(n+2*i+3);
+        top_idx.push_back(i+1);
+        bottom_idx.push_back(3*n+5+i);
+    }
+    FPUSH_VTX3_AT(p, 3*n+4, 0, -half_height, 0);
+    FPUSH_VTX3_AT(normals, 3*n+4, 0, -1, 0);
+}
+
+void get_torus_3d(std::vector<GLfloat>& p, std::vector<GLfloat>& normals, std::vector<std::vector<GLuint>>& side_idx, GLfloat r0, GLfloat r1, GLint na, GLint nh){
+    GLfloat theta, pi, x, y, z;
+    p.resize(3 * 2 * nh * (na + 1));
+    normals.resize(3 * 2 * nh * (na + 1));
+
+    for(int i = 0; i <= nh; i++){
+        std::vector<GLuint> temp;
+        pi = (GLfloat)(2.0 * M_PI * i / nh);
+        for(int j = 0; j <= na; j++){
+            theta = (GLfloat)(2.0 * M_PI * j / na);
+            x = ((r0 + r1) * sin(theta)) + (r1 * cos(pi) * sin(theta));
+            y = r1 * sin(pi);
+            z = ((r0 + r1) * cos(theta)) + (r1 * cos(pi) * cos(theta));
+            if(i != nh){
+                temp.push_back(i*(na+1) + j);
+                temp.push_back((i+1)*(na+1) + j);
+            }
+            FPUSH_VTX3_AT(p, i*(na+1)+j, x, y, z);
+            FPUSH_VTX3_AT(normals, i*(na+1)+j, (r1 * cos(pi) * sin(theta))/r1, y/r1, (r1 * cos(pi) * cos(theta))/r1);
+        }
+        side_idx.push_back(temp);
+    }
 }

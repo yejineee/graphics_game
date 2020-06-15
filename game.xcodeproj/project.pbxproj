@@ -13,8 +13,8 @@
 		0E0B89B0248F9CB300BFF698 /* LoadShaders.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0E0B89AF248F9CB300BFF698 /* LoadShaders.cpp */; };
 		0E0B89B4248F9CCA00BFF698 /* tiny_obj_loader.cc in Sources */ = {isa = PBXBuildFile; fileRef = 0E0B89B3248F9CCA00BFF698 /* tiny_obj_loader.cc */; };
 		0E0B89C2248FB03200BFF698 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0E0B89C1248FB03200BFF698 /* main.cpp */; };
-		0E6A05C82495024900E14B64 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0B89A2248F9A1900BFF698 /* GLUT.framework */; };
-		0E6A05C92495024900E14B64 /* GLUT.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0B89A2248F9A1900BFF698 /* GLUT.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BB26D5C1249687FF00D72CF2 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB26D59924937FF300D72CF2 /* GLUT.framework */; };
+		BB26D5C2249687FF00D72CF2 /* GLUT.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BB26D59924937FF300D72CF2 /* GLUT.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,13 +27,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		0E6A05CA2495024900E14B64 /* Embed Frameworks */ = {
+		BB26D5C3249687FF00D72CF2 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				0E6A05C92495024900E14B64 /* GLUT.framework in Embed Frameworks */,
+				BB26D5C2249687FF00D72CF2 /* GLUT.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -77,6 +77,9 @@
 		0EA917262496348500B3DF76 /* 10621_CoastGuardHelicopter.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 10621_CoastGuardHelicopter.obj; sourceTree = "<group>"; };
 		BB26D59924937FF300D72CF2 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = ../../../../Downloads/GLUT.framework; sourceTree = "<group>"; };
 		BB26D5C02494B51D00D72CF2 /* o4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = o4.jpg; sourceTree = "<group>"; };
+		BB26D5C824975CB600D72CF2 /* 12190_Heart_v1_L3.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 12190_Heart_v1_L3.obj; sourceTree = "<group>"; };
+		BB26D5C924975CB600D72CF2 /* 12190_Heart_v1_L3.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 12190_Heart_v1_L3.mtl; sourceTree = "<group>"; };
+		BB26D5CA24975CB700D72CF2 /* blank.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = blank.jpg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,7 +89,7 @@
 			files = (
 				0E0B89A7248F9A4C00BFF698 /* libGLEW.2.1.0.dylib in Frameworks */,
 				0E0B89AA248F9A7400BFF698 /* OpenGL.framework in Frameworks */,
-				0E6A05C82495024900E14B64 /* GLUT.framework in Frameworks */,
+				BB26D5C1249687FF00D72CF2 /* GLUT.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,6 +130,9 @@
 				0E0B89B1248F9CC900BFF698 /* tiny_obj_loader.h */,
 				0E0B8A0F2492711100BFF698 /* ARC170_TXT_VERSION_4_D.tga */,
 				0E0B89EB248FCFEB00BFF698 /* bixler.mtl */,
+				BB26D5C924975CB600D72CF2 /* 12190_Heart_v1_L3.mtl */,
+				BB26D5C824975CB600D72CF2 /* 12190_Heart_v1_L3.obj */,
+				BB26D5CA24975CB700D72CF2 /* blank.jpg */,
 				0E6A05E724950AE400E14B64 /* Maps */,
 				0E6A05EF24950AE500E14B64 /* tri-colonial sector.mtl */,
 				0E6A05F024950AE600E14B64 /* tri-colonial sector.obj */,
@@ -177,7 +183,7 @@
 				0E0B8993248F99A800BFF698 /* Sources */,
 				0E0B8994248F99A800BFF698 /* Frameworks */,
 				0E0B8995248F99A800BFF698 /* CopyFiles */,
-				0E6A05CA2495024900E14B64 /* Embed Frameworks */,
+				BB26D5C3249687FF00D72CF2 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);

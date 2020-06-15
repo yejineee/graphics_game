@@ -73,6 +73,12 @@ void main()
 //        FragColor = fColor;
         FragColor = texture(ourTexture, TexCoord);
     }
+    else if(ColorMode == 6){
+        FragColor = vec4(1,1,0,1);
+    }
+    else if(ColorMode == 7){
+        FragColor = vec4(1,0.8f,0,1);
+    }
     else if(ColorMode == 1){
         float nc = ObjectCode / 255.0 ;
         FragColor = vec4(nc, nc, nc, 1) ;
