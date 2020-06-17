@@ -679,7 +679,7 @@ void render(int color_mode){
                     }
                 }
                 a_count++;
-                if(a_count % 150 == 0 && a_missile <= 20) a_missile += 1;
+                if(a_count % 150 == 0 && a_missile < 20) a_missile += 1;
                 
                 for(int i = 0 ; i < n_boss ; i++){
                     M = boss_state[i].get_transf() ;
