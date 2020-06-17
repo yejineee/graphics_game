@@ -312,7 +312,8 @@ TorusPrimitive torus(1.0f, 0.2f, 30, 10);
 
 std::vector<Model*> models;
 const int n_missile = 20;
-
+int a_missile = 1;
+int a_count = 0;
 GLfloat d_move = 0.08f ;
 
  struct State
@@ -427,7 +428,7 @@ float model_scales[NUM_OF_MODELS] = {0.3f, 0.3f, 0.2f, 0.1f, 1.5f};
 State state[NUM_OF_MODELS];
 const int n_heli = 10 ;
 State heli_state[n_heli] ;
-const int n_heart = 2;
+const int n_heart = 1;
 State heart_state[n_heart];
 const int n_boss = 1;
 State boss_state[n_boss];
@@ -509,7 +510,7 @@ void init(){
     
     for(int i = 0 ; i < n_boss ; i++){
         boss_state[i].x_pos = left_most + rand() % 200 * 0.01 ;
-        boss_state[i].z_pos = z_top - 5.0f;;
+        boss_state[i].z_pos = z_top - 30.0f;;
     }
     
     for (unsigned int k = 0; k < NUM_OF_MODELS; ++k)
@@ -624,7 +625,7 @@ void render(int color_mode){
                 draw_obj_model(user, color_mode, user+1);
                 srand(time(NULL)) ;
                 
-                for(int i = 0 ; i < n_missile ; i++){
+                for(int i = 0 ; i < a_missile ; i++){
                     M = models[i+2]->get_transf();
                     glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
                     models[i+2]->draw();
@@ -637,8 +638,8 @@ void render(int color_mode){
                     models[i+2]->z_pos < z_bottom+0.2f ? models[i+2]->z_pos += rand() % 500 * 0.00005 : models[i+2]->z_pos = z_top - rand() % 500 * 0.01 ;
 
                 }
-                
-                for(int i = 0 ; i < n_heli ; i++){
+
+                for(int i = 0 ; i < a_missile / 2 ; i++){
                     M = heli_state[i].get_transf() ;
                     glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
                     draw_obj_model(HELI, color_mode, HELI+1);
@@ -677,18 +678,20 @@ void render(int color_mode){
                         heart_state[i].z_pos = z_top - rand() % 1000 * 0.01 ;
                     }
                 }
+                a_count++;
+                if(a_count % 150 == 0 && a_missile <= 20) a_missile += 1;
                 
                 for(int i = 0 ; i < n_boss ; i++){
                     M = boss_state[i].get_transf() ;
                     glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
                     draw_obj_model(BOSS, color_mode, BOSS+1);
-                    float around = 0.3f ;
+                    float around = 0.4f ;
                     if(boss_state[i].z_pos + around >= state[user].z_pos && boss_state[i].z_pos - around <= state[user].z_pos
                        && boss_state[i].x_pos + around >= state[user].x_pos && boss_state[i].x_pos - around <= state[user].x_pos){
                         fin = true ;
                         break ;
                     }
-                    if(boss_state[i].z_pos < z_bottom-0.5f){
+                    if(boss_state[i].z_pos < z_bottom+1.5f){
                         boss_state[i].z_pos += 0.01f ;
                     }
                     else{
