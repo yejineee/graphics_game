@@ -70,6 +70,7 @@ p[i3+2] = (float)(vz) ; \
 GLint program ;
 GLint shading_mode = 2 ;
 void build_program() ;
+bool mission_complete = false;
 bool fin = false ;
 
 void keyboard(unsigned char key, int x, int y) ;
@@ -146,11 +147,15 @@ public:
 //    GLvec vtx_clrs;
     float left_rad;
     GLfloat x_pos, y_pos, z_pos ;
+    GLfloat x_siz, y_siz, z_siz ;
     
     Model():
         y_pos(0),
         z_pos(0),
-        x_pos(0){}
+        x_pos(0),
+        x_siz(1),
+        y_siz(1),
+        z_siz(1){}
     
     virtual void init(GLint program)
     {
@@ -170,6 +175,7 @@ public:
     {
         mat4 M(1.0f);
         M = translate(M, vec3(x_pos, y_pos, z_pos));
+        M = scale(M, vec3(x_siz, y_siz, z_siz));
 //        M = rotate(M, theta, vec3(0.0f, 1.0f, 0.0f)) ;
         return M;
     }
@@ -307,10 +313,52 @@ struct Missile : public Model
     }
 };
 
+struct blowUp : public Model
+{
+    SpherePrimitive* sphere;
+    
+    blowUp(
+        SpherePrimitive* sphere)
+    {
+        this->sphere = sphere;
+    }
+
+    glm::mat4 transf(
+        GLfloat sx, GLfloat sy, GLfloat sz,
+        GLfloat tx, GLfloat ty, GLfloat tz,
+        glm::mat4* T_pre = NULL,
+        glm::mat4* T_post = NULL,
+        bool set_uniform = true)
+    {
+        using namespace glm;
+        mat4 T = model_state.get_transformation();
+        T = translate(T, vec3(tx, ty, tz));
+        T = scale(T, vec3(sx, sy, sz));
+        if(T_pre) T = (*T_pre) * T;
+        if(T_post) T = T * (*T_post);
+        if(set_uniform){
+            GLuint location = glGetUniformLocation(program, "M") ;
+            glUniformMatrix4fv(location, 1, GL_FALSE, value_ptr(T));
+        }
+        return T;
+    }
+
+    virtual void draw()
+    {
+        using namespace glm;
+        
+        // sphere_center
+        glUniform1i(UVARS("ColorMode"), 7);
+        transf(x_siz, y_siz, z_siz, x_pos, y_pos, z_pos);
+        sphere->draw();
+    }
+};
+
 SpherePrimitive sphere(0.7f, 15, 15);
 TorusPrimitive torus(1.0f, 0.2f, 30, 10);
 
 std::vector<Model*> models;
+std::vector<Model*> ending;
 const int n_missile = 20;
 int a_missile = 1;
 int a_count = 0;
@@ -477,6 +525,15 @@ void init(){
     float size = 0.02f;
     
     build_program();
+    
+    ending.push_back(new blowUp(&sphere));
+    ending[0]->x_pos = 0.0f;
+    ending[0]->y_pos = 0.0f;
+    ending[0]->z_pos = 0.0f;
+    ending[0]->x_siz = 1.0f;
+    ending[0]->y_siz = 1.0f;
+    ending[0]->z_siz = 1.0f;
+    ending[0]->init(program);
     
     for(int i = 0 ; i < n_missile ; i++){
         float m_x_pos = left_most + rand() % 200 * 0.01 ;
@@ -685,9 +742,10 @@ void render(int color_mode){
                     M = boss_state[i].get_transf() ;
                     glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
                     draw_obj_model(BOSS, color_mode, BOSS+1);
-                    float around = 0.4f ;
-                    if(boss_state[i].z_pos + around >= state[user].z_pos && boss_state[i].z_pos - around <= state[user].z_pos
+                    float around = 0.05f ;
+                    if(boss_state[i].z_pos + 0.01f >= state[user].z_pos && boss_state[i].z_pos - 1.0f <= state[user].z_pos
                        && boss_state[i].x_pos + around >= state[user].x_pos && boss_state[i].x_pos - around <= state[user].x_pos){
+                        mission_complete = true;
                         fin = true ;
                         break ;
                     }
@@ -703,6 +761,14 @@ void render(int color_mode){
 
             }
             else{
+                if(mission_complete){
+                    M = ending[0]->get_transf();
+                    glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
+                    ending[0]->x_siz += 0.01f;
+                    ending[0]->y_siz += 0.01f;
+                    ending[0]->z_siz += 0.01f;
+                    ending[0]->draw();
+                }
                // game finished
             }
         }
