@@ -510,7 +510,7 @@ void init(){
     
     for(int i = 0 ; i < n_boss ; i++){
         boss_state[i].x_pos = left_most + rand() % 200 * 0.01 ;
-        boss_state[i].z_pos = z_top - 30.0f;;
+        boss_state[i].z_pos = z_top - 30.0f;
     }
     
     for (unsigned int k = 0; k < NUM_OF_MODELS; ++k)
@@ -680,7 +680,7 @@ void render(int color_mode){
                 }
                 a_count++;
                 if(a_count % 150 == 0 && a_missile < 20) a_missile += 1;
-                
+                cout<<a_missile<<endl;
                 for(int i = 0 ; i < n_boss ; i++){
                     M = boss_state[i].get_transf() ;
                     glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
