@@ -378,7 +378,7 @@ struct Camera{
 };
 Camera camera ;
 int user = -1 ;
-enum {MODEL_USER1, MODEL_USER2, HELI, HEART, NUM_OF_MODELS};
+enum {MODEL_USER1, MODEL_USER2, HELI, HEART, BOSS, NUM_OF_MODELS};
 enum {PICKING=1, PHONG, GOURAUD} ;
 
 //path 지우지 말고 주석처리해놓기!
@@ -389,7 +389,10 @@ enum {PICKING=1, PHONG, GOURAUD} ;
 //const char* model_files[NUM_OF_MODELS] = {
 //"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/ARC170.obj",
 //"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/bixler.obj",
-//"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/10621_CoastGuardHelicopter.obj"
+//"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/10621_CoastGuardHelicopter.obj",
+//"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/12190_Heart_v1_L3.obj",
+//"/Users/yang-yejin/Desktop/graphics/term_tex/game/game/Organodron_City.obj"
+
 //   };
 
 const char* back2d_path = "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/o4.jpg" ;
@@ -400,7 +403,8 @@ const char* model_files[NUM_OF_MODELS] = {
 "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/ARC170.obj",
 "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/bixler.obj",
 "/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/10621_CoastGuardHelicopter.obj",
-"/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/12190_Heart_v1_L3.obj"
+"/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/12190_Heart_v1_L3.obj",
+"/Users/im-aron/Documents/4-1/ComputerGraphics/graphics_game/game/Organodron City.obj"
    };
 
 GLuint vao[NUM_OF_MODELS], vbo[NUM_OF_MODELS][3];
@@ -416,12 +420,17 @@ void get_rect_3d(GLvec &p, GLfloat width, GLfloat height, GLfloat z);
 void get_vertex_color(GLvec &color, GLuint n, GLfloat r, GLfloat g, GLfloat b);
 void get_rect_texcoord(GLvec &q);
 
-float model_scales[NUM_OF_MODELS] = {0.3f, 0.3f, 0.2f, 0.1f};
+float plane_scale_0 = 0.3f;
+float plane_scale_1 = 0.3f;
+
+float model_scales[NUM_OF_MODELS] = {0.3f, 0.3f, 0.2f, 0.1f, 1.5f};
 State state[NUM_OF_MODELS];
 const int n_heli = 10 ;
 State heli_state[n_heli] ;
 const int n_heart = 2;
 State heart_state[n_heart];
+const int n_boss = 1;
+State boss_state[n_boss];
 vector<real_t> vertices[NUM_OF_MODELS];
 vector<real_t> normals[NUM_OF_MODELS];
 vector<real_t> colors[NUM_OF_MODELS];
@@ -498,6 +507,11 @@ void init(){
         heart_state[i].z_pos = z_top - rand() % 1000 * 0.01 ;
     }
     
+    for(int i = 0 ; i < n_boss ; i++){
+        boss_state[i].x_pos = left_most + rand() % 200 * 0.01 ;
+        boss_state[i].z_pos = z_top - 5.0f;;
+    }
+    
     for (unsigned int k = 0; k < NUM_OF_MODELS; ++k)
         {
             attrib_t attrib;
@@ -544,7 +558,6 @@ void init(){
 
 void display()
 {
-
     if(user < 0){
         render(shading_mode) ;
         glFlush();
@@ -594,6 +607,7 @@ void render(int color_mode){
 
         glUniform1i(UVARS("ourTexture"), 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        
         if(user == -1){
             for (int i = 0; i < 2; ++i)
             {
@@ -608,6 +622,7 @@ void render(int color_mode){
                 M = state[user].get_transf() ;
                 glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
                 draw_obj_model(user, color_mode, user+1);
+                srand(time(NULL)) ;
                 
                 for(int i = 0 ; i < n_missile ; i++){
                     M = models[i+2]->get_transf();
@@ -617,7 +632,6 @@ void render(int color_mode){
                     if(models[i+2]->z_pos + around >= state[user].z_pos && models[i+2]->z_pos - around <= state[user].z_pos
                        && models[i+2]->x_pos + around >= state[user].x_pos && models[i+2]->x_pos - around <= state[user].x_pos){
                         fin = true ;
-                        printf("!!! user z : %f, plane z : %f\n",  state[user].z_pos, models[i+2]->z_pos) ;
                         break ;
                     }
                     models[i+2]->z_pos < z_bottom+0.2f ? models[i+2]->z_pos += rand() % 500 * 0.00005 : models[i+2]->z_pos = z_top - rand() % 500 * 0.01 ;
@@ -632,10 +646,15 @@ void render(int color_mode){
                     if(heli_state[i].z_pos + around >= state[user].z_pos && heli_state[i].z_pos - around <= state[user].z_pos
                        && heli_state[i].x_pos + around >= state[user].x_pos && heli_state[i].x_pos - around <= state[user].x_pos){
                         fin = true ;
-                        printf("!!! user z : %f, plane z : %f\n",  state[user].z_pos, heli_state[i].z_pos) ;
                         break ;
                     }
-                    heli_state[i].z_pos < z_bottom+0.2f ? heli_state[i].z_pos += 0.01f : heli_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
+                    if(heli_state[i].z_pos < z_bottom+0.2f){
+                        heli_state[i].z_pos += 0.01f ;
+                    }
+                    else{
+                        heli_state[i].x_pos = left_most + rand() % 200 * 0.01 ;
+                        heli_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
+                    }
 
                 }
                 
@@ -647,10 +666,36 @@ void render(int color_mode){
                     if(heart_state[i].z_pos + around >= state[user].z_pos && heart_state[i].z_pos - around <= state[user].z_pos
                        && heart_state[i].x_pos + around >= state[user].x_pos && heart_state[i].x_pos - around <= state[user].x_pos){
                         d_move += 0.02f;
-                        printf("!!! user z : %f, plane z : %f\n", state[user].z_pos, heart_state[i].z_pos) ;
-                        heart_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
+                        heart_state[i].z_pos = z_top - rand() % 1000 * 0.01 ;
+                        heart_state[i].x_pos = left_most + rand() % 200 * 0.01 ;
                     }
-                    heart_state[i].z_pos < z_bottom+0.2f ? heart_state[i].z_pos += 0.03f : heart_state[i].z_pos = z_top - rand() % 500 * 0.01 ;
+                    if(heart_state[i].z_pos < z_bottom+0.2f){
+                        heart_state[i].z_pos += 0.03f ;
+                    }
+                    else{
+                        heart_state[i].x_pos = left_most + rand() % 200 * 0.01 ;
+                        heart_state[i].z_pos = z_top - rand() % 1000 * 0.01 ;
+                    }
+                }
+                
+                for(int i = 0 ; i < n_boss ; i++){
+                    M = boss_state[i].get_transf() ;
+                    glUniformMatrix4fv(M_location, 1, GL_FALSE, value_ptr(M)) ;
+                    draw_obj_model(BOSS, color_mode, BOSS+1);
+                    float around = 0.3f ;
+                    if(boss_state[i].z_pos + around >= state[user].z_pos && boss_state[i].z_pos - around <= state[user].z_pos
+                       && boss_state[i].x_pos + around >= state[user].x_pos && boss_state[i].x_pos - around <= state[user].x_pos){
+                        fin = true ;
+                        break ;
+                    }
+                    if(boss_state[i].z_pos < z_bottom-0.5f){
+                        boss_state[i].z_pos += 0.01f ;
+                    }
+                    else{
+                        boss_state[i].x_pos = left_most + rand() % 200 * 0.01 ;
+                        boss_state[i].z_pos = z_top - 5.0f ;
+                    }
+
                 }
 
             }
@@ -842,7 +887,6 @@ GLuint generate_background(){
         std::cout << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data);
-//    glBindTexture(GL_TEXTURE_2D, 0);
     return texture;
 }
 

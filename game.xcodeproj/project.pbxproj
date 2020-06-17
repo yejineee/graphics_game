@@ -80,6 +80,10 @@
 		BB26D5C824975CB600D72CF2 /* 12190_Heart_v1_L3.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 12190_Heart_v1_L3.obj; sourceTree = "<group>"; };
 		BB26D5C924975CB600D72CF2 /* 12190_Heart_v1_L3.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 12190_Heart_v1_L3.mtl; sourceTree = "<group>"; };
 		BB26D5CA24975CB700D72CF2 /* blank.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = blank.jpg; sourceTree = "<group>"; };
+		BBF50D522499C8730097BFC9 /* cta4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cta4.jpg; sourceTree = "<group>"; };
+		BBF50D532499C8730097BFC9 /* b1b2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = b1b2.jpg; sourceTree = "<group>"; };
+		BBF50D542499C87D0097BFC9 /* Organodron City.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Organodron City.obj"; sourceTree = "<group>"; };
+		BBF50D552499C87D0097BFC9 /* Organodron_City.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Organodron_City.mtl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,6 +143,8 @@
 				0E6A05E624950AE400E14B64 /* tri-colonial_sector.mtl */,
 				0E0B89EC248FCFED00BFF698 /* bixler.obj */,
 				0E0B89ED248FCFF400BFF698 /* bixlerTexturedUVmap.png */,
+				BBF50D542499C87D0097BFC9 /* Organodron City.obj */,
+				BBF50D552499C87D0097BFC9 /* Organodron_City.mtl */,
 				0E0B89C6248FB16A00BFF698 /* viewing.vert */,
 				0E0B89C7248FB17B00BFF698 /* viewing.frag */,
 				0E0B89AF248F9CB300BFF698 /* LoadShaders.cpp */,
@@ -162,6 +168,8 @@
 		0E6A05E724950AE400E14B64 /* Maps */ = {
 			isa = PBXGroup;
 			children = (
+				BBF50D532499C8730097BFC9 /* b1b2.jpg */,
+				BBF50D522499C8730097BFC9 /* cta4.jpg */,
 				0E6A05E824950AE400E14B64 /* snd2_01.jpg */,
 				0E6A05E924950AE400E14B64 /* 1arw.jpg */,
 				0E6A05EA24950AE400E14B64 /* antenna.jpg */,
